@@ -16,3 +16,9 @@ tela de login e registro
 tela de edição de pedido
 
 delete de pedido é somente um popup, confirmação de delete atráves de senha do usuário
+
+Desenvolvedores do Banco e back - end
+
+.Luiz Edaurdo 
+.Igor Porto
+
