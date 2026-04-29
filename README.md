@@ -19,7 +19,7 @@ delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 Desenvolvedores do Banco e back - end
 
-.Luiz Eduardo
+*Luiz Eduardo
 
-.Igor Porto
+*Igor Porto
 
