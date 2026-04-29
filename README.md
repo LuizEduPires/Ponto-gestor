@@ -19,7 +19,10 @@ delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 Desenvolvedores do Banco e back - end
 
-*Luiz Eduardo
+*Luiz Eduardo Madeira Pires
 
-*Igor Porto
+*Igor Porto de Matos
+
+Utilizamos a ferramenta de modelagem de dados Mermaid Live Editor para criação do modelo meta físico do banco de dados, para posterior exportação dos scripts DDL das tabelas e relacionamentos.
+Arquivo fonte: Modelo Fisico.
 
