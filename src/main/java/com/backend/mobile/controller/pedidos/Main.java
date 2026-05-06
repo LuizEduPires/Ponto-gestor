@@ -12,15 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-/**
- * Ponto de entrada do sistema de costura.
- *
- * Demonstra todas as operações da coleção "pedidos" via menu interativo.
- *
- * PRÉ-REQUISITO:
- *   Coloque o arquivo serviceAccountKey.json (baixado do console Firebase)
- *   em src/main/resources/ antes de executar.
- */
 public class Main {
 
     // Simula o UID de uma costureira autenticada
