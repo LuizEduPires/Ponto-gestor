@@ -14,7 +14,6 @@ import java.util.Scanner;
 
 public class Main {
 
-    // Simula o UID de uma costureira autenticada
     private static final String UID_DONO = "uid-costureira-exemplo-001";
 
     private static final PedidoService servico  = new PedidoService();
@@ -172,7 +171,6 @@ public class Main {
     private static void demonstracaoAutomatica() {
         System.out.println("\n── Demonstração automática ──");
 
-        // Cria datas de exemplo
         Date dataProva    = proximoDia(7);
         Date dataEntrega  = proximoDia(14);
 
@@ -217,7 +215,6 @@ public class Main {
     //  AUXILIARES
     // ════════════════════════════════════════════════════════════════
 
-    // Expõe listarPorSituacao para o menu (evita acesso direto ao repositório)
     private static List<Pedido> listarPorSituacao(String uidDono, SituacaoPedido situacao) {
         return switch (situacao) {
             case EM_PRODUCAO -> servico.listarEmProducao(uidDono);
