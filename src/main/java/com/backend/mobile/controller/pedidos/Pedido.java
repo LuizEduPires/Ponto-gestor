@@ -6,22 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Representa um pedido de costura.
- *
- * Campos idênticos à coleção "pedidos" no Firestore:
- *   id, uidDono, idCliente, nomeCliente, telefoneCliente,
- *   tipo, situacao, quantidadePecas, descricao,
- *   dataProva, dataEntrega, saldo, modelosCliente, criadoEm
- */
 public class Pedido {
 
     // ── identificadores ────────────────────────────────────────────
-    private String id;              // gerado automaticamente pelo Firestore
-    private String uidDono;         // FK → usuarios
-    private String idCliente;       // FK → clientes
-    private String nomeCliente;     // desnormalizado
-    private String telefoneCliente; // desnormalizado
+    private String id;              
+    private String uidDono;         
+    private String idCliente;       
+    private String nomeCliente;    
+    private String telefoneCliente; 
 
     // ── tipo e situação ─────────────────────────────────────────────
     private TipoPedido tipo;
@@ -86,9 +78,6 @@ public class Pedido {
         return mapa;
     }
 
-    /**
-     * Cria um Pedido a partir de um Map recuperado do Firestore.
-     */
     public static Pedido deMap(String id, Map<String, Object> dados) {
         Pedido p = new Pedido();
         p.id              = id;
