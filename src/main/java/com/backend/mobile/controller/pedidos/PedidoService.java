@@ -9,14 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Camada de serviço para pedidos.
- *
- * Centraliza as regras de negócio antes de chamar o repositório:
- *   - validação de campos obrigatórios
- *   - regras de transição de situação
- *   - cálculo/formatação de dados
- */
 public class PedidoService {
 
     private final PedidoRepository repositorio;
@@ -131,9 +123,6 @@ public class PedidoService {
     //  EXCLUIR
     // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Exclui um pedido. Não é permitido excluir pedidos já entregues.
-     */
     public void excluir(String id) {
         Pedido pedido = repositorio.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado: " + id));
