@@ -10,24 +10,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Responsável por inicializar o Firebase Admin SDK.
- *
- * Como obter o arquivo serviceAccountKey.json:
- *   1. Acesse console.firebase.google.com
- *   2. Configurações do projeto → Contas de serviço
- *   3. Clique em "Gerar nova chave privada"
- *   4. Salve o arquivo como src/main/resources/serviceAccountKey.json
- */
 public class FirebaseConfig {
 
     private static Firestore instancia;
 
     private FirebaseConfig() {}
 
-    /**
-     * Retorna a instância única do Firestore (padrão Singleton).
-     */
     public static synchronized Firestore getFirestore() {
         if (instancia == null) {
             inicializar();
@@ -60,11 +48,6 @@ public class FirebaseConfig {
         }
     }
 
-    /**
-     * Tenta carregar a chave de serviço primeiro do classpath,
-     * depois de um caminho absoluto definido pela variável de ambiente
-     * GOOGLE_APPLICATION_CREDENTIALS.
-     */
     private static InputStream carregarCredencial() throws IOException {
         // 1ª tentativa: classpath (ideal para desenvolvimento)
         InputStream recurso = FirebaseConfig.class
