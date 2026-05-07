@@ -8,34 +8,33 @@ import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 @Configuration
 public class FirebaseConfig {
 
     @Bean
     public Firestore getFirestore() throws IOException {
-        // Verifica se o Firebase já não foi iniciado antes
         if (FirebaseApp.getApps().isEmpty()) {
 
-            // Tenta achar o arquivo na pasta resources
-            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("firebase-service-account.json");
+            try {
+                // A MÁGICA MUDA AQUI: Lendo direto da raiz do projeto, ignorando a compilação do Maven
+                FileInputStream serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
 
-            if (serviceAccount == null) {
-                // Se não achar o arquivo, ele PARA o aplicativo e te avisa claramente o porquê
-                throw new RuntimeException("❌ ERRO CRÍTICO: Arquivo 'firebase-service-account.json' não foi encontrado na pasta 'src/main/resources'!");
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .build();
+
+                FirebaseApp.initializeApp(options);
+                System.out.println("✅ Firebase inicializado com sucesso para o Ponto Gestor!");
+
+            } catch (Exception e) {
+                System.err.println("❌ ERRO: O arquivo ainda não foi encontrado. Verifique se o nome está EXATAMENTE igual a 'firebase-service-account.json' e se ele está dentro da pasta 'src/main/resources'");
+                throw e; // Trava a inicialização para não rodar o app quebrado
             }
-
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-
-            FirebaseApp.initializeApp(options);
-            System.out.println("✅ Firebase inicializado com sucesso para o Ponto Gestor!");
         }
 
-        // Retorna a conexão com o banco de dados pronta para uso
         return FirestoreClient.getFirestore();
     }
 }
