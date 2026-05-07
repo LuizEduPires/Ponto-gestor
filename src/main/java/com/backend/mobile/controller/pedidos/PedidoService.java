@@ -17,7 +17,6 @@ public class PedidoService {
         this.repositorio = new PedidoRepository();
     }
 
-    // ── injeção de dependência (facilita testes unitários) ──────────
     public PedidoService(PedidoRepository repositorio) {
         this.repositorio = repositorio;
     }
