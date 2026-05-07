@@ -18,11 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-/**
- * Repositório responsável por todas as operações da coleção "pedidos"
- * no Firebase Firestore.
- *
- * Operações disponíveis:
  *   - salvar()         → cria um novo pedido
  *   - atualizar()      → atualiza campos de um pedido existente
  *   - buscarPorId()    → lê um único documento
