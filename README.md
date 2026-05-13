@@ -29,7 +29,7 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 ## Tabelas do banco
 
-- [Agendamento](#Agendamento.java)
+- [Agendamento](#agendament)
 - [Cliente](#cliente)
 - [Pagamento](#pagamento)
 - [Pedido](#pedido)
