@@ -4,31 +4,46 @@ import com.backend.mobile.models.Cliente;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/clientes")
 public class ClienteController {
 
-    private final Firestore firestore;
+    @Autowired
+    private Firestore firestore;
 
-    public ClienteController(Firestore firestore) {
-        this.firestore = firestore;
+    // 1. Rota para CRIAR um novo cliente
+    @PostMapping
+    public String criarCliente(@RequestBody Cliente cliente) throws ExecutionException, InterruptedException {
+        // Salva na coleção "clientes"
+        ApiFuture<DocumentReference> futuro = firestore.collection("clientes").add(cliente);
+        DocumentReference documento = futuro.get();
+        return "Cliente cadastrado com sucesso! ID: " + documento.getId();
     }
 
-    @PostMapping
-    public String salvarCliente(@RequestBody Cliente cliente) throws ExecutionException, InterruptedException {
-        Map<String, Object> dadosCliente = new HashMap<>();
-        dadosCliente.put("nome", cliente.getNome());
-        dadosCliente.put("telefone", cliente.getTelefone());
-        dadosCliente.put("data_cadastro", System.currentTimeMillis());
+    // 2. Rota para LISTAR TODOS os clientes
+    @GetMapping
+    public List<Cliente> listarClientes() throws ExecutionException, InterruptedException {
+        List<Cliente> listaDeClientes = new ArrayList<>();
 
-        ApiFuture<DocumentReference> resultado = firestore.collection("clientes").add(dadosCliente);
+        // Pede todos os documentos da coleção "clientes"
+        ApiFuture<QuerySnapshot> futuro = firestore.collection("clientes").get();
+        List<QueryDocumentSnapshot> documentos = futuro.get().getDocuments();
 
-        return "Cliente " + cliente.getNome() + " salvo com sucesso no ID: " + resultado.get().getId();
+        for (QueryDocumentSnapshot documento : documentos) {
+            Cliente cliente = documento.toObject(Cliente.class);
+            cliente.setId(documento.getId()); // Pega o ID de fora e joga pra dentro do objeto
+            listaDeClientes.add(cliente);
+        }
+
+        return listaDeClientes;
     }
 }

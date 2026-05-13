@@ -8,8 +8,11 @@ import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
@@ -19,19 +22,28 @@ public class FirebaseConfig {
         if (FirebaseApp.getApps().isEmpty()) {
 
             try {
-                // A MÁGICA MUDA AQUI: Lendo direto da raiz do projeto, ignorando a compilação do Maven
-                FileInputStream serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
+                InputStream serviceAccount;
+
+                String firebaseEnv = System.getenv("FIREBASE_CREDENTIALS");
+
+                if (firebaseEnv != null && !firebaseEnv.isEmpty()) {
+                    serviceAccount = new ByteArrayInputStream(firebaseEnv.getBytes(StandardCharsets.UTF_8));
+                    System.out.println("☁️ Lendo credenciais do Firebase via Variável de Ambiente (Produção).");
+                } else {
+                    serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
+                    System.out.println("💻 Lendo credenciais do Firebase via Arquivo Local.");
+                }
 
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .build();
 
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase inicializado com sucesso para o Ponto Gestor!");
+                System.out.println(" Firebase inicializado com sucesso!");
 
             } catch (Exception e) {
-                System.err.println("❌ ERRO: O arquivo ainda não foi encontrado. Verifique se o nome está EXATAMENTE igual a 'firebase-service-account.json' e se ele está dentro da pasta 'src/main/resources'");
-                throw e; // Trava a inicialização para não rodar o app quebrado
+                System.err.println(" ERRO ao carregar as credenciais do Firebase.");
+                throw e;
             }
         }
 
