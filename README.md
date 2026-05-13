@@ -27,6 +27,6 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 
 
-## Tabelas do banco
+## Abaixo, segue os scripts utilizados separados por tipo:
 
-+ [Tabelas](src/main/java/models)
++ [Tabelas](src/main/)
