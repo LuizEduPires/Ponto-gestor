@@ -29,9 +29,4 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 ## Tabelas do banco
 
-- [Agendamento](#agendament)
-- [Cliente](#cliente)
-- [Pagamento](#pagamento)
-- [Pedido](#pedido)
-- [Usuario](#usuario)
-
++ [Tabelas](src/main/java/models)
