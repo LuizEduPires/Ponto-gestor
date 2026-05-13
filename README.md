@@ -27,11 +27,6 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 
 
-## Tabelas do banco
+## Abaixo, segue os scripts utilizados separados por tipo:
 
-- [Agendamento](#agendament)
-- [Cliente](#cliente)
-- [Pagamento](#pagamento)
-- [Pedido](#pedido)
-- [Usuario](#usuario)
-
++ [Tabelas](src/main/)
