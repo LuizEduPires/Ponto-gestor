@@ -25,15 +25,18 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 ### APIs utilizadas
 
+
+
 ### Tabelas do banco
-*Agendamento
 
-*Cliente
+* Agendamento
 
-*Pagamento
+* Cliente
 
-*Pedido
+* Pagamento
 
-*Usuario
+* Pedido
+
+* Usuario
 
 
