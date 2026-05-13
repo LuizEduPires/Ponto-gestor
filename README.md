@@ -29,4 +29,4 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 ## Abaixo, segue os scripts utilizados separados por tipo:
 
-+ [Tabelas](src/main/)
++ [Tabelas](src/main/java/com/backend/mobile/models)
