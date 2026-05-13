@@ -35,7 +35,6 @@ public class PedidoController {
         List<QueryDocumentSnapshot> documentos = futuro.get().getDocuments();
 
         for (QueryDocumentSnapshot documento : documentos) {
-            // O Firebase transforma o JSON do banco direto na sua classe Java!
             Pedido pedido = documento.toObject(Pedido.class);
 
             pedido.setId(documento.getId());

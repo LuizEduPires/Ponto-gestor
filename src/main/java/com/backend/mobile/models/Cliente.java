@@ -7,11 +7,9 @@ public class Cliente {
     private String telefone;
     private String email;
 
-    // Construtor vazio (Obrigatório para o Firebase funcionar)
     public Cliente() {
     }
 
-    // Getters e Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
