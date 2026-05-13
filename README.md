@@ -25,9 +25,9 @@ Delete de pedido é somente um popup, confirmação de delete atráves de senha 
 
 ### APIs utilizadas
 
+Até o momento as APIs utilizadas são as do Firebase
 
-
-## Abaixo, segue os scripts utilizados separados por tipo:
+### Abaixo, segue os scripts utilizados separados por tipo:
 
 + [Tabelas](src/main/java/com/backend/mobile/models)
 + [Controller](src/main/java/com/backend/mobile/controller)
