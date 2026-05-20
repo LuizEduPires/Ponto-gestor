@@ -61,32 +61,6 @@ cd Ponto-gestor
 A API estará disponível em `http://localhost:8080`
 
 ---
-
-## 📂 Estrutura do Projeto
-
-```
-src/main/java/com/backend/mobile/
-├── config/         # Configurações do Firebase e CORS
-├── controller/     # Endpoints da API REST
-└── models/         # Entidades do sistema
-```
-
----
-
-## 🔗 Endpoints da API
-
-| Método | Rota | Descrição |
-|---|---|---|
-| POST | `/api/clientes` | Cadastrar cliente |
-| GET | `/api/clientes` | Listar clientes |
-| POST | `/api/pedidos` | Criar pedido |
-| GET | `/api/pedidos` | Listar pedidos |
-| GET | `/api/pedidos/{id}` | Buscar pedido por ID |
-| POST | `/api/usuarios` | Cadastrar usuário |
-| GET | `/api/usuarios` | Listar usuários |
-
----
-
 ## 👨‍💻 Desenvolvedores
 
 | Nome | Função |
