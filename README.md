@@ -1,33 +1,95 @@
-# Ponto Gestor
+# 🧵 Ponto Gestor
 
-Desenvolvimento_Mobile
-Aplicativo para costureiras
+Aplicativo mobile desenvolvido para auxiliar **costureiras** no gerenciamento de clientes e pedidos de costura, facilitando o controle do dia a dia do ateliê.
 
-Gerir clientes e pedidos
+---
 
-Uma tela hub de pedidos
+## 📱 Funcionalidades
 
-Uma tela de criação de pedidos que mostra simplificado os tecidos e cores com botões de roupa modelos de roupa e tal anexar preço do da roupa, anexar data de entrega da roupa, caso especificos de pedido podem anexar junto imagens para servir de modelo que o cliente deu ou de descrição que ele deu em conversa, anexar contato do cliente se tiver
+- **Tela de Login e Registro** — autenticação segura via Firebase
+- **Hub de Pedidos** — visão geral de todos os pedidos em andamento
+- **Criação de Pedidos** — registro simplificado com:
+  - Tipo de peça e tecido
+  - Preço e data de entrega
+  - Fotos de referência enviadas pelo cliente
+  - Contato do cliente
+- **Detalhamento do Pedido** — informações completas como tecido, tipo de botão e especificações
+- **Edição de Pedido** — atualização de qualquer informação registrada
+- **Exclusão de Pedido** — confirmação via senha do usuário para evitar exclusões acidentais
 
-Uma tela mais detalhada mostrando os tecidos, tipos de botão e tal
+---
 
-Tela de login e registro
+## 🛠️ Tecnologias Utilizadas
 
-Tela de edição de pedido
+| Camada | Tecnologia |
+|---|---|
+| Back-end | Java 17 + Spring Boot |
+| Banco de Dados | Firebase Firestore |
+| Autenticação | Firebase Auth |
+| Containerização | Docker |
 
-Delete de pedido é somente um popup, confirmação de delete atráves de senha do usuário
+---
 
-## Desenvolvedores do Banco de Dados e Back - End:
+## 🚀 Como Executar o Projeto
 
-* Luiz Eduardo Madeira Pires
+### Pré-requisitos
 
-* Igor Porto de Matos
+- Java 17
+- Maven
+- Conta no Firebase com projeto criado
 
-### APIs utilizadas
+### Configuração do Firebase
 
-Até o momento as APIs utilizadas são as do Firebase
+1. Acesse o [Firebase Console](https://console.firebase.google.com/)
+2. Vá em **Configurações do Projeto → Contas de Serviço**
+3. Clique em **Gerar nova chave privada** e baixe o arquivo `.json`
+4. Renomeie para `firebase-service-account.json` e coloque em `src/main/resources/`
 
-### Abaixo, segue os scripts utilizados separados por tipo:
+### Executando
 
-+ [Tabelas](src/main/java/com/backend/mobile/models)
-+ [Controller](src/main/java/com/backend/mobile/controller)
+```bash
+# Clone o repositório
+git clone https://github.com/LuizEduPires/Ponto-gestor.git
+
+# Entre na pasta
+cd Ponto-gestor
+
+# Execute o projeto
+./mvnw spring-boot:run
+```
+
+A API estará disponível em `http://localhost:8080`
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+src/main/java/com/backend/mobile/
+├── config/         # Configurações do Firebase e CORS
+├── controller/     # Endpoints da API REST
+└── models/         # Entidades do sistema
+```
+
+---
+
+## 🔗 Endpoints da API
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/clientes` | Cadastrar cliente |
+| GET | `/api/clientes` | Listar clientes |
+| POST | `/api/pedidos` | Criar pedido |
+| GET | `/api/pedidos` | Listar pedidos |
+| GET | `/api/pedidos/{id}` | Buscar pedido por ID |
+| POST | `/api/usuarios` | Cadastrar usuário |
+| GET | `/api/usuarios` | Listar usuários |
+
+---
+
+## 👨‍💻 Desenvolvedores
+
+| Nome | Função |
+|---|---|
+| Luiz Eduardo Madeira Pires | Back-end & Banco de Dados |
+| Igor Porto de Matos | Back-end & Banco de Dados |
