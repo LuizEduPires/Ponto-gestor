@@ -1,6 +1,7 @@
 package com.backend.mobile.models;
 
 public class Pagamento {
+    private String id;                          // ← campo adicionado
     private String tipoPagamento; // Ex: "Pix", "Cartão"
     private Double valor;
     private String dataPagamento;
@@ -13,6 +14,8 @@ public class Pagamento {
         this.dataPagamento = dataPagamento;
     }
 
+    public String getId() { return id; }        // ← getter adicionado
+    public void setId(String id) { this.id = id; } // ← setter adicionado
 
     public String getTipoPagamento() { return tipoPagamento; }
     public void setTipoPagamento(String tipoPagamento) { this.tipoPagamento = tipoPagamento; }
