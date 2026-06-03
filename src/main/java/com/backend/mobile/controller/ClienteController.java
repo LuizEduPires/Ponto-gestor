@@ -6,7 +6,6 @@ import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -17,8 +16,11 @@ import java.util.concurrent.ExecutionException;
 @RequestMapping("/api/clientes")
 public class ClienteController {
 
-    @Autowired
-    private Firestore firestore;
+    private final Firestore firestore;
+
+    public ClienteController(Firestore firestore) {
+        this.firestore = firestore;
+    }
 
     @PostMapping
     public String criarCliente(@RequestBody Cliente cliente) throws ExecutionException, InterruptedException {

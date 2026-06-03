@@ -19,7 +19,6 @@ public class Agendamento {
     public String getDataHora() { return dataHora; }
     public void setDataHora(String dataHora) { this.dataHora = dataHora; }
 
-    // Atenção: O padrão de Getter para Boolean maiúsculo muda de "is" para "get"
     public Boolean getConcluido() { return concluido; }
     public void setConcluido(Boolean concluido) { this.concluido = concluido; }
 }
