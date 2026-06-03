@@ -3,6 +3,7 @@ package com.backend.mobile.controller;
 import com.backend.mobile.models.Pedido;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -21,12 +22,10 @@ public class PedidoController {
 
     @PostMapping
     public String salvarPedidoCompleto(@RequestBody Pedido pedido) throws ExecutionException, InterruptedException {
-
-
         ApiFuture<DocumentReference> futuro = firestore.collection("pedidos").add(pedido);
-
         return "Pedido criado com sucesso no Firebase! ID: " + futuro.get().getId();
     }
+
     @GetMapping
     public List<Pedido> listarTodos() throws ExecutionException, InterruptedException {
         List<Pedido> listaDePedidos = new ArrayList<>();
@@ -36,9 +35,7 @@ public class PedidoController {
 
         for (QueryDocumentSnapshot documento : documentos) {
             Pedido pedido = documento.toObject(Pedido.class);
-
             pedido.setId(documento.getId());
-
             listaDePedidos.add(pedido);
         }
 
@@ -46,8 +43,7 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    public Pedido buscarPorId(@PathVariable String id) throws ExecutionException, InterruptedException {
-
+    public ResponseEntity<Pedido> buscarPorId(@PathVariable String id) throws ExecutionException, InterruptedException {
         DocumentReference referencia = firestore.collection("pedidos").document(id);
         ApiFuture<DocumentSnapshot> futuro = referencia.get();
         DocumentSnapshot documento = futuro.get();
@@ -55,9 +51,9 @@ public class PedidoController {
         if (documento.exists()) {
             Pedido pedido = documento.toObject(Pedido.class);
             pedido.setId(documento.getId());
-            return pedido;
+            return ResponseEntity.ok(pedido);
         } else {
-            return null;
+            return ResponseEntity.notFound().build();
         }
     }
 }

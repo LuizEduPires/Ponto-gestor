@@ -3,6 +3,7 @@ package com.backend.mobile.controller;
 import com.backend.mobile.models.Pagamento;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public class PagamentoController {
     }
 
     @GetMapping("/{id}")
-    public Pagamento buscarPorId(@PathVariable String id) throws ExecutionException, InterruptedException {
+    public ResponseEntity<Pagamento> buscarPorId(@PathVariable String id) throws ExecutionException, InterruptedException {
         DocumentReference referencia = firestore.collection("pagamentos").document(id);
         ApiFuture<DocumentSnapshot> futuro = referencia.get();
         DocumentSnapshot documento = futuro.get();
@@ -50,9 +51,9 @@ public class PagamentoController {
         if (documento.exists()) {
             Pagamento pagamento = documento.toObject(Pagamento.class);
             pagamento.setId(documento.getId());
-            return pagamento;
+            return ResponseEntity.ok(pagamento);
         } else {
-            return null;
+            return ResponseEntity.notFound().build();
         }
     }
 }
