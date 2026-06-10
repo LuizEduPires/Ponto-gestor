@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: pontoGestao
+api:
+  jwt:
+    secretKey: "meunomenãoéjhoni"
