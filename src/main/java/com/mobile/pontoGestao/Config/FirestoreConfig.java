@@ -8,6 +8,7 @@ import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,10 +18,25 @@ public class FirestoreConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
+        InputStream serviceAccount;
 
-        InputStream serviceAccount =
-                getClass().getClassLoader()
-                        .getResourceAsStream("servicefirebase.json");
+        // Caminho padrão onde o Render injeta os "Secret Files"
+        File renderSecret = new File("/etc/secrets/servicefirebase.json");
+
+        if (renderSecret.exists()) {
+            // Se existir, estamos rodando na nuvem do Render
+            serviceAccount = new FileInputStream(renderSecret);
+            System.out.println("✅ Firebase conectado usando o cofre do Render!");
+        } else {
+            // Se não existir, estamos rodando localmente no seu computador (IntelliJ)
+            serviceAccount = getClass().getClassLoader().getResourceAsStream("servicefirebase.json");
+
+            // Trava de segurança extra para avisar se o arquivo realmente sumiu
+            if (serviceAccount == null) {
+                throw new RuntimeException("❌ ERRO GRAVE: Arquivo servicefirebase.json não encontrado em nenhum lugar!");
+            }
+            System.out.println("✅ Firebase conectado usando o arquivo local!");
+        }
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
