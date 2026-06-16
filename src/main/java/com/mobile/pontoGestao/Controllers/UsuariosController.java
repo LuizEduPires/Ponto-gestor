@@ -1,6 +1,7 @@
 package com.mobile.pontoGestao.Controllers;
 
 import com.google.firebase.auth.FirebaseAuthException;
+import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioRequest;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioToken;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioUpdate;
@@ -40,6 +41,11 @@ public class UsuariosController {
     @PatchMapping
     public UsuarioResponse updateUsuario(@RequestBody @Valid UsuarioUpdate usuarioUpdate) throws ExecutionException, InterruptedException {
         return service.atualizarUsuario(usuarioUpdate);
+    }
+
+    @PatchMapping("/atualizar/senha")
+    public UsuarioResponse updateSenha(@RequestBody @Valid SenhaRequest request) throws ExecutionException, InterruptedException {
+        return service.atualizarSenha(request);
     }
 
     @GetMapping

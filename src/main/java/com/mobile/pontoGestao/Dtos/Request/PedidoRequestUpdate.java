@@ -14,11 +14,6 @@ public record PedidoRequestUpdate(
         List<ItemsPedidoRequest> itens,
         String idCliente,
         TipoPedido tipoPedido,
-        String descricao,
-        LocalDateTime dataProva,
-        LocalDateTime dataEntrega,
-        LocalDateTime dataPrazo,
         Double pagamentoAntecipado,
-        TipoPagamento tipoPagamento,
-        StatusPedido statusPedido) {
+        TipoPagamento tipoPagamento) {
 }

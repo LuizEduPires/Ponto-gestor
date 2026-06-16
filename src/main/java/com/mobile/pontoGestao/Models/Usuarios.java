@@ -1,5 +1,6 @@
 package com.mobile.pontoGestao.Models;
 
+import com.mobile.pontoGestao.Enums.Permissoes;
 import lombok.Data;
 
 import java.util.UUID;
@@ -10,4 +11,5 @@ public class Usuarios {
     private String nome;
     private String email;
     private String senha;
+    private Permissoes permissao;
 }
