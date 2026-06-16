@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -34,9 +36,15 @@ public class SecurityFilter extends OncePerRequestFilter {
         if(token != null){
             String subject = tokenService.validateToken(token);
 
-            if (subject.isEmpty()) throw new AuthorizationTokenInvalidException("Token invalido");
-
-            var authentication = new UsernamePasswordAuthenticationToken(subject,null,List.of());
+            if (subject.isEmpty()) throw new AuthorizationTokenInvalidException("Token inválido");
+            String role = tokenService.getPermissao(token);
+            List<GrantedAuthority> grantedAuthorities = List.of();
+            if (role.equals("ADMIN")) {
+                grantedAuthorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }else {
+                grantedAuthorities = List.of(new SimpleGrantedAuthority("ROLE_FUNCIONARIO"));
+            }
+            var authentication = new UsernamePasswordAuthenticationToken(subject,null,grantedAuthorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(request, response);

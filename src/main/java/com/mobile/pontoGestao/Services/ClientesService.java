@@ -5,13 +5,17 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.mobile.pontoGestao.Dtos.Request.ClienteRequest;
+import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Response.ClienteResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoCliente;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
+import com.mobile.pontoGestao.Erros.LoginInvalidException;
 import com.mobile.pontoGestao.Mappers.ClienteMapper;
 import com.mobile.pontoGestao.Models.Clientes;
 import com.mobile.pontoGestao.Models.Usuarios;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -25,6 +29,8 @@ public class ClientesService {
     private final Firestore firestore;
 
     private final ClienteMapper clienteMapper;
+
+    private final PasswordEncoder passwordEncoder;
 
     public ClienteResponse criarCliente(ClienteRequest request) {
         Clientes cliente = clienteMapper.toModel(request);
@@ -72,7 +78,19 @@ public class ClientesService {
         return clienteMapper.toResponse(cliente);
     }
 
-    public void deletarCliente(String id) {
+    public void deletarCliente(String id, SenhaRequest request) throws ExecutionException, InterruptedException {
+        String idUsuario = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal().toString();
+        ApiFuture<QuerySnapshot> future = firestore.collection("usuarios")
+                .whereEqualTo("id", idUsuario)
+                .get();
+        QuerySnapshot snapshot = future.get();
+        if (snapshot.isEmpty()) throw new EntityNotFoundException("Não foi possivel encontrar o usuário");
+        Usuarios usuario = snapshot.getDocuments().getFirst().toObject(Usuarios.class);
+
+        if (!passwordEncoder.matches(request.senha(), usuario.getSenha()))  throw new LoginInvalidException("Não foi possível validar a requisição");
         firestore.collection("clientes").document(id).delete();
     }
 }

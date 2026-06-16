@@ -16,12 +16,7 @@ public class Pedidos {
     private List<ItemsPedido> itens;
     private String idCliente;
     private String nomeCliente;
-    private TipoPedido tipoPedido;
     private StatusPedido statusPedido = StatusPedido.PRODUCAO;
-    private String descricao;
-    private Timestamp dataProva;
-    private Timestamp dataEntrega;
-    private Timestamp dataPrazo;
     private Double pagamentoAntecipado;
     private Double orcamento;
     private Double saldo;

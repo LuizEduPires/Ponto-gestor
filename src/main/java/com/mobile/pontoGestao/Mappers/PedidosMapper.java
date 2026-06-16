@@ -8,14 +8,8 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface PedidosMapper {
-    @Mapping(ignore = true, target = "dataProva")
-    @Mapping(ignore = true, target = "dataEntrega")
-    @Mapping(ignore = true, target = "dataPrazo")
     Pedidos toModel(PedidoRequest request);
     PedidoResponse toDto(Pedidos pedido);
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(ignore = true, target = "dataProva")
-    @Mapping(ignore = true, target = "dataEntrega")
-    @Mapping(ignore = true, target = "dataPrazo")
     void updatePedido(PedidoRequestUpdate request,@MappingTarget Pedidos pedido);
 }

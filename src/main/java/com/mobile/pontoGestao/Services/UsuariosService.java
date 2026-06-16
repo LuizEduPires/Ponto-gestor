@@ -5,9 +5,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioRequest;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioToken;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioUpdate;
+import com.mobile.pontoGestao.Dtos.Request.*;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioLogin;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioResponse;
 import com.mobile.pontoGestao.Erros.EntityAlreadyExistsException;
@@ -38,7 +36,7 @@ public class UsuariosService {
 
         QuerySnapshot snapshot = future.get();
 
-        if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já esta sendo utilizado.");
+        if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já está sendo utilizado.");
 
         Usuarios usuario = usuarioMapper.toModel(request);
         String novaSenha = passwordEncoder.encode(usuario.getSenha());
@@ -53,15 +51,32 @@ public class UsuariosService {
 
         QuerySnapshot snapshot = future.get();
 
-        if (snapshot.isEmpty()) throw new LoginInvalidException("Email ou senha invalidos.");
+        if (snapshot.isEmpty()) throw new LoginInvalidException("Email ou senha inválidos.");
 
         Usuarios usuario = convertDocumentToUsuario(snapshot);
 
-        if (!passwordEncoder.matches(login.senha(), usuario.getSenha()))  throw new LoginInvalidException("Email ou senha invalidos.");
+        if (!passwordEncoder.matches(login.senha(), usuario.getSenha()))  throw new LoginInvalidException("Email ou senha inválidos.");
 
         String token = tokenService.generateToken(usuario);
 
         return new UsuarioToken(token);
+    }
+
+    public UsuarioResponse atualizarSenha(SenhaRequest senha) throws ExecutionException, InterruptedException {
+        String id = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal().toString();
+        ApiFuture<QuerySnapshot> future = getUsuarioById(id);
+        QuerySnapshot snapshot = future.get();
+        Usuarios usuario = convertDocumentToUsuario(snapshot);
+
+        String novaSenha = passwordEncoder.encode(senha.senha());
+        usuario.setSenha(novaSenha);
+
+        firestore.collection("usuarios").document(usuario.getId()).set(usuario);
+
+        return usuarioMapper.toResponse(usuario);
     }
 
     public UsuarioResponse atualizarUsuario(UsuarioUpdate update) throws ExecutionException, InterruptedException {
@@ -76,7 +91,7 @@ public class UsuariosService {
         if (update.email() != null) {
             future = getUsuarioByEmail(update.email());
             snapshot = future.get();
-            if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já esta sendo utilizado.");
+            if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já está sendo utilizado.");
         }
 
         usuarioMapper.updateUsuario(update, usuario);
@@ -87,7 +102,7 @@ public class UsuariosService {
     }
 
     private static Usuarios convertDocumentToUsuario(QuerySnapshot snapshot) {
-        if (snapshot.isEmpty()) throw new EntityNotFoundException("Não foi possivel encontrar o usuario");
+        if (snapshot.isEmpty()) throw new EntityNotFoundException("Não foi possível encontrar o usuário");
         return snapshot.getDocuments().getFirst().toObject(Usuarios.class);
     }
 

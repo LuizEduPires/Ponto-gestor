@@ -18,14 +18,6 @@ public record PedidoRequest(
         List<ItemsPedidoRequest> itens,
         @NotBlank(message = "O id do cliente não pode ser nulo ou vazio")
         String idCliente,
-        @NotNull(message = "O tipo do pedido é obrigatorio")
-        TipoPedido tipoPedido,
-        String descricao,
-        LocalDateTime dataProva,
-        LocalDateTime dataEntrega,
-        @NotNull(message = "A data de entrega é obrigatória")
-        @FutureOrPresent(message = "A data de entrega deve ser hoje ou uma data futura")
-        LocalDateTime dataPrazo,
         @Min(value = 0, message = "Pagamento minimo deve ser 0")
         Double pagamentoAntecipado,
         @NotNull(message = "O tipo do pagamento é obrigatorio")
