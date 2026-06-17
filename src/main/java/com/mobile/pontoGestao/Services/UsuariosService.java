@@ -58,15 +58,6 @@ public class UsuariosService {
     public UsuarioToken criarToken(UsuarioLogin login)
         throws ExecutionException, InterruptedException {
 
-                QuerySnapshot snapshot = firestore.collection("usuarios").get().get();
-
-                System.out.println("TOTAL USERS: " + snapshot.size());
-
-                snapshot.getDocuments().forEach(doc -> {
-                        System.out.println("DATA: " + doc.getData());
-                });
-
-                // volta a lógica normal depois do debug
                 QuerySnapshot loginSnapshot = getUsuarioByEmail(login.email()).get();
 
                 if (loginSnapshot.isEmpty()) {
