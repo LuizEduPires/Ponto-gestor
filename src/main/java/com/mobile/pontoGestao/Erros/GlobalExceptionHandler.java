@@ -1,6 +1,7 @@
 package com.mobile.pontoGestao.Erros;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.google.api.gax.rpc.InvalidArgumentException;
 import com.mobile.pontoGestao.Dtos.Response.MessageResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,6 +70,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<MessageResponseDto> handleLoginInvalid(LoginInvalidException ex){
         String message = ex.getLocalizedMessage();
         return new ResponseEntity<>(new MessageResponseDto(message),HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<MessageResponseDto> handleInvalidValue(IllegalArgumentException ex){
+        String message = ex.getLocalizedMessage();
+        return new ResponseEntity<>(new MessageResponseDto(message),HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
