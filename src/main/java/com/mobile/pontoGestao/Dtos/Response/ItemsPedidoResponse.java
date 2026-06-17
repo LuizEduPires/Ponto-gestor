@@ -1,7 +1,8 @@
 package com.mobile.pontoGestao.Dtos.Response;
 
 import com.mobile.pontoGestao.Enums.TipoItemPedido;
-import com.google.cloud.Timestamp;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ItemsPedidoResponse(
@@ -9,8 +10,8 @@ public record ItemsPedidoResponse(
         String descricao,
         Double valor,
         List<String> imagem,
-        Timestamp dataEntrega,
-        Timestamp dataProva,
-        Timestamp dataPrazo,
+        LocalDateTime dataPrazo,
+        LocalDateTime dataEntrega,
+        LocalDateTime dataProva,
         TipoItemPedido tipo
 ) {}
