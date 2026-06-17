@@ -3,10 +3,10 @@ package com.mobile.pontoGestao.Services;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.Timestamp;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
 import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
+import com.mobile.pontoGestao.Dtos.Response.ItemsPedidoResponse;
 import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoPedido;
 import com.mobile.pontoGestao.Enums.StatusPedido;
@@ -23,7 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -77,7 +76,13 @@ public class PedidosService {
         Comparator<PedidoResponse> comparator = switch (ordenacao) {
             case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
             case TITULO -> Comparator.comparing(PedidoResponse::titulo);
-            case PRAZO -> Comparator.comparing(PedidoResponse::titulo);
+            case PRAZO -> Comparator.comparing(
+                    p -> p.itens().stream()
+                            .map(ItemsPedidoResponse::dataPrazo)
+                            .filter(Objects::nonNull)
+                            .min(LocalDateTime::compareTo)
+                            .orElse(LocalDateTime.MAX)
+            );
             case null -> Comparator.comparing(PedidoResponse::titulo);
         };
 
@@ -87,7 +92,7 @@ public class PedidosService {
                 .map(pedidosMapper::toDto)
                 .filter(p ->
                         titulo == null ||
-                                p.titulo().toLowerCase().contains(titulo.toLowerCase())
+                        p.titulo().toLowerCase().contains(titulo.toLowerCase())
                 )
                 .sorted(comparator)
                 .toList();
@@ -154,7 +159,9 @@ public class PedidosService {
     private void recalcularPedido(Pedidos pedido) {
 
         if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
-            throw new RuntimeException("O pedido deve possuir ao menos um item");
+            throw new IllegalArgumentException(
+                    "O pedido deve possuir ao menos um item"
+            );
         }
 
         double orcamento = pedido.getItens()
@@ -168,18 +175,14 @@ public class PedidosService {
         );
 
         if (pagamentoAntecipado > orcamento) {
-            throw new RuntimeException("Pagamento antecipado não pode ser maior que o orçamento");
+            throw new IllegalArgumentException(
+                    "Pagamento antecipado não pode ser maior que o orçamento"
+            );
         }
 
         pedido.setOrcamento(orcamento);
         pedido.setQuantidade(pedido.getItens().size());
         pedido.setSaldo(orcamento - pagamentoAntecipado);
-    }
-
-    private Timestamp convert(LocalDateTime dateTime) {
-        return Timestamp.of(java.util.Date.from(
-                dateTime.atZone(ZoneId.systemDefault()).toInstant()
-        ));
     }
 
     private Pedidos getPedidoById(String id)
@@ -209,7 +212,9 @@ public class PedidosService {
             throw new EntityNotFoundException("Cliente não encontrado");
         }
 
-        return snapshot.getDocuments().getFirst().toObject(Clientes.class);
+        return snapshot.getDocuments()
+                .getFirst()
+                .toObject(Clientes.class);
     }
 
     private Usuarios getUsuarioById(String id)
@@ -224,6 +229,8 @@ public class PedidosService {
             throw new EntityNotFoundException("Usuário não encontrado");
         }
 
-        return snapshot.getDocuments().getFirst().toObject(Usuarios.class);
+        return snapshot.getDocuments()
+                .getFirst()
+                .toObject(Usuarios.class);
     }
 }
