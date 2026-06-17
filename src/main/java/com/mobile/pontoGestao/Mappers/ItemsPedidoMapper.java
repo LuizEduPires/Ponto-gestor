@@ -8,7 +8,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ItemsPedidoMapper {
 
-    @Mapping(target = "dataProva", ignore = true)
+    @Mapping(target = "dataPrazo", ignore = true)
     @Mapping(target = "dataEntrega", ignore = true)
+    @Mapping(target = "dataProva", ignore = true)
     ItemsPedido toModel(ItemsPedidoRequest request);
 }

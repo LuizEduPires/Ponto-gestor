@@ -1,9 +1,8 @@
 package com.mobile.pontoGestao.Dtos.Request;
 
 import com.mobile.pontoGestao.Enums.TipoItemPedido;
-import com.google.cloud.Timestamp;
 import jakarta.validation.constraints.*;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ItemsPedidoRequest(
@@ -20,11 +19,11 @@ public record ItemsPedidoRequest(
         List<String> imagem,
 
         @NotNull(message = "É necessario uma data de prazo")
-        Timestamp dataPrazo,
+        LocalDateTime dataPrazo,
 
-        Timestamp dataEntrega,
+        LocalDateTime dataEntrega,
 
-        Timestamp dataProva,
+        LocalDateTime dataProva,
 
         @NotNull(message = "Item deve ter um tipo")
         TipoItemPedido tipo
