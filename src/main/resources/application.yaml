@@ -3,4 +3,4 @@ spring:
     name: pontoGestao
 api:
   jwt:
-    secretKey: "CAFE BABE"
+    secretKey: ${JWT_SECRET}
