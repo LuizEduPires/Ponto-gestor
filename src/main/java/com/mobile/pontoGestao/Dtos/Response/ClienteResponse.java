@@ -1,6 +1,11 @@
 package com.mobile.pontoGestao.Dtos.Response;
 
-import com.google.cloud.Timestamp;
+import java.time.LocalDateTime;
 
-public record ClienteResponse(String id, String nome, String telefone, String descricao, Timestamp dataCriacao) {
-}
+public record ClienteResponse(
+    String id,
+    String nome,
+    String telefone,
+    String descricao,
+    LocalDateTime dataCriacao
+) {}
