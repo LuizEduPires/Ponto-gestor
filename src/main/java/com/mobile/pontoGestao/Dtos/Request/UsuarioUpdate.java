@@ -1,4 +1,11 @@
 package com.mobile.pontoGestao.Dtos.Request;
 
-public record UsuarioUpdate(String nome, String email) {
-}
+import jakarta.validation.constraints.Email;
+
+public record UsuarioUpdate(
+
+        String nome,
+
+        @Email(message = "Email não está em um formato válido")
+        String email
+) {}
