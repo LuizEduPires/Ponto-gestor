@@ -24,10 +24,8 @@ public class PedidosController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PedidoResponse criarPedido(
-            @RequestBody @Valid PedidoRequest request
-    ) throws ExecutionException, InterruptedException {
-
+    public PedidoResponse criarPedido(@RequestBody @Valid PedidoRequest request)
+            throws ExecutionException, InterruptedException {
         return pedidosService.criarPedido(request);
     }
 
@@ -37,27 +35,18 @@ public class PedidosController {
             @RequestParam(required = false) String titulo,
             @RequestParam(required = false) OrdenacaoPedido ordenacao
     ) throws ExecutionException, InterruptedException {
-
-        return pedidosService.verPedidos(
-                statusPedido,
-                titulo,
-                ordenacao
-        );
+        return pedidosService.verPedidos(statusPedido, titulo, ordenacao);
     }
 
     @GetMapping("/{id}")
-    public PedidoResponse verPedido(
-            @PathVariable String id
-    ) throws ExecutionException, InterruptedException {
-
+    public PedidoResponse verPedido(@PathVariable String id)
+            throws ExecutionException, InterruptedException {
         return pedidosService.verPedido(id);
     }
 
     @GetMapping("/cliente/{idCliente}")
-    public List<PedidoResponse> verPedidosPorCliente(
-            @PathVariable String idCliente
-    ) throws ExecutionException, InterruptedException {
-
+    public List<PedidoResponse> verPedidosPorCliente(@PathVariable String idCliente)
+            throws ExecutionException, InterruptedException {
         return pedidosService.getPedidosByCliente(idCliente);
     }
 
@@ -66,7 +55,6 @@ public class PedidosController {
             @PathVariable String id,
             @RequestBody @Valid PedidoRequestUpdate request
     ) throws ExecutionException, InterruptedException {
-
         return pedidosService.atualizarPedido(id, request);
     }
 
@@ -76,7 +64,6 @@ public class PedidosController {
             @PathVariable String id,
             @RequestBody @Valid SenhaRequest request
     ) throws ExecutionException, InterruptedException {
-
         pedidosService.deletarPedidos(id, request);
     }
 }
