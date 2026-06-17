@@ -30,9 +30,16 @@ public class TokenService {
     public String validateToken(String token){
         try{
             Algorithm algorithm = Algorithm.HMAC256(secretKey);
-            return JWT.require(algorithm).withIssuer("ponto-gestao").build().verify(token).getSubject();
+    
+            return JWT.require(algorithm)
+                    .withIssuer("ponto-gestao")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+    
         }catch(JWTVerificationException ex){
-            return "";
+            ex.printStackTrace();
+            throw ex;
         }
     }
 
