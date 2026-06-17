@@ -1,7 +1,7 @@
 package com.mobile.pontoGestao.Services;
 
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
@@ -40,7 +40,6 @@ public class PedidosService {
         Clientes cliente = getClienteById(request.idCliente());
 
         Pedidos pedido = pedidosMapper.toModel(request);
-
         pedido.setNomeCliente(cliente.getNome());
 
         recalcularPedido(pedido);
@@ -55,9 +54,7 @@ public class PedidosService {
     public PedidoResponse verPedido(String id)
             throws ExecutionException, InterruptedException {
 
-        Pedidos pedido = getPedidoById(id);
-
-        return pedidosMapper.toDto(pedido);
+        return pedidosMapper.toDto(getPedidoById(id));
     }
 
     public List<PedidoResponse> verPedidos(
@@ -66,7 +63,7 @@ public class PedidosService {
             OrdenacaoPedido ordenacao
     ) throws ExecutionException, InterruptedException {
 
-        var query = firestore.collection("pedidos");
+        Query query = firestore.collection("pedidos");
 
         if (statusPedido != null) {
             query = query.whereEqualTo("statusPedido", statusPedido);
@@ -77,10 +74,7 @@ public class PedidosService {
         Comparator<PedidoResponse> comparator = switch (ordenacao) {
             case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
             case TITULO -> Comparator.comparing(PedidoResponse::titulo);
-            case PRAZO -> Comparator.comparing(
-                    PedidoResponse::dataPrazo,
-                    Comparator.nullsLast(Comparator.naturalOrder())
-            );
+            case PRAZO -> Comparator.comparing(PedidoResponse::titulo); // fallback seguro
             case null -> Comparator.comparing(PedidoResponse::titulo);
         };
 
@@ -90,9 +84,24 @@ public class PedidosService {
                 .map(pedidosMapper::toDto)
                 .filter(p ->
                         titulo == null ||
-                        p.titulo().toLowerCase().contains(titulo.toLowerCase())
+                                p.titulo().toLowerCase().contains(titulo.toLowerCase())
                 )
                 .sorted(comparator)
+                .toList();
+    }
+
+    public List<PedidoResponse> getPedidosByCliente(String idCliente)
+            throws ExecutionException, InterruptedException {
+
+        QuerySnapshot snapshot = firestore.collection("pedidos")
+                .whereEqualTo("idCliente", idCliente)
+                .get()
+                .get();
+
+        return snapshot.getDocuments()
+                .stream()
+                .map(doc -> doc.toObject(Pedidos.class))
+                .map(pedidosMapper::toDto)
                 .toList();
     }
 
@@ -156,16 +165,13 @@ public class PedidosService {
         );
 
         if (pagamentoAntecipado > orcamento) {
-            throw new RuntimeException(
-                    "Pagamento antecipado não pode ser maior que o orçamento"
-            );
+            throw new RuntimeException("Pagamento antecipado não pode ser maior que o orçamento");
         }
 
         pedido.setOrcamento(orcamento);
         pedido.setQuantidade(pedido.getItens().size());
         pedido.setSaldo(orcamento - pagamentoAntecipado);
     }
-
 
     private Pedidos getPedidoById(String id)
             throws ExecutionException, InterruptedException {
@@ -194,9 +200,7 @@ public class PedidosService {
             throw new EntityNotFoundException("Cliente não encontrado");
         }
 
-        return snapshot.getDocuments()
-                .getFirst()
-                .toObject(Clientes.class);
+        return snapshot.getDocuments().getFirst().toObject(Clientes.class);
     }
 
     private Usuarios getUsuarioById(String id)
@@ -211,8 +215,6 @@ public class PedidosService {
             throw new EntityNotFoundException("Usuário não encontrado");
         }
 
-        return snapshot.getDocuments()
-                .getFirst()
-                .toObject(Usuarios.class);
+        return snapshot.getDocuments().getFirst().toObject(Usuarios.class);
     }
 }
