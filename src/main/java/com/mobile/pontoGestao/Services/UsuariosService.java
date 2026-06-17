@@ -56,33 +56,33 @@ public class UsuariosService {
     }
 
     public UsuarioToken criarToken(UsuarioLogin login)
-            throws ExecutionException, InterruptedException {
+        throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = getUsuarioByEmail(
-                login.email()
-        ).get();
+                QuerySnapshot snapshot = firestore.collection("usuarios").get().get();
 
-        if (snapshot.isEmpty()) {
-            throw new LoginInvalidException(
-                    "Email ou senha inválidos."
-            );
+                System.out.println("TOTAL USERS: " + snapshot.size());
+
+                snapshot.getDocuments().forEach(doc -> {
+                        System.out.println("DATA: " + doc.getData());
+                });
+
+                // volta a lógica normal depois do debug
+                QuerySnapshot loginSnapshot = getUsuarioByEmail(login.email()).get();
+
+                if (loginSnapshot.isEmpty()) {
+                        throw new LoginInvalidException("Email ou senha inválidos.");
+                }
+
+                Usuarios usuario = convertDocumentToUsuario(loginSnapshot);
+
+                if (!passwordEncoder.matches(login.senha(), usuario.getSenha())) {
+                        throw new LoginInvalidException("Email ou senha inválidos.");
+                }
+
+                String token = tokenService.generateToken(usuario);
+
+                return new UsuarioToken(token);
         }
-
-        Usuarios usuario = convertDocumentToUsuario(snapshot);
-
-        if (!passwordEncoder.matches(
-                login.senha(),
-                usuario.getSenha()
-        )) {
-            throw new LoginInvalidException(
-                    "Email ou senha inválidos."
-            );
-        }
-
-        String token = tokenService.generateToken(usuario);
-
-        return new UsuarioToken(token);
-    }
 
     public UsuarioResponse atualizarSenha(SenhaRequest senha)
             throws ExecutionException, InterruptedException {
