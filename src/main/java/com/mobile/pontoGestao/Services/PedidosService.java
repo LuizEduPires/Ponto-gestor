@@ -1,14 +1,11 @@
 package com.mobile.pontoGestao.Services;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
 import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
-import com.mobile.pontoGestao.Dtos.Response.ItemsPedidoResponse;
 import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoPedido;
 import com.mobile.pontoGestao.Enums.StatusPedido;
@@ -26,8 +23,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +37,7 @@ public class PedidosService {
     public PedidoResponse criarPedido(PedidoRequest request)
             throws ExecutionException, InterruptedException {
 
-        QuerySnapshot clienteSnapshot = getDocumentSnapshots(
-                "clientes",
-                request.idCliente(),
-                "Não foi possível encontrar o cliente"
-        );
-
-        Clientes cliente = clienteSnapshot.getDocuments()
-                .getFirst()
-                .toObject(Clientes.class);
+        Clientes cliente = getClienteById(request.idCliente());
 
         Pedidos pedido = pedidosMapper.toModel(request);
 
@@ -66,31 +55,9 @@ public class PedidosService {
     public PedidoResponse verPedido(String id)
             throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = getDocumentSnapshots(
-                "pedidos",
-                id,
-                "Não foi possível encontrar o pedido"
-        );
-
-        Pedidos pedido = snapshot.getDocuments()
-                .getFirst()
-                .toObject(Pedidos.class);
+        Pedidos pedido = getPedidoById(id);
 
         return pedidosMapper.toDto(pedido);
-    }
-
-    private Timestamp getMenorPrazo(PedidoResponse pedido) {
-
-        if (pedido.itens() == null || pedido.itens().isEmpty()) {
-            return null;
-        }
-
-        return pedido.itens()
-                .stream()
-                .map(ItemsPedidoResponse::dataPrazo)
-                .filter(Objects::nonNull)
-                .min(Timestamp::compareTo)
-                .orElse(null);
     }
 
     public List<PedidoResponse> verPedidos(
@@ -99,7 +66,7 @@ public class PedidosService {
             OrdenacaoPedido ordenacao
     ) throws ExecutionException, InterruptedException {
 
-        Query query = firestore.collection("pedidos");
+        var query = firestore.collection("pedidos");
 
         if (statusPedido != null) {
             query = query.whereEqualTo("statusPedido", statusPedido);
@@ -107,34 +74,26 @@ public class PedidosService {
 
         QuerySnapshot snapshot = query.get().get();
 
-        Comparator<PedidoResponse> comparator = Comparator.comparing(PedidoResponse::titulo);
-
-        if (ordenacao != null) {
-            comparator = switch (ordenacao) {
-                case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
-                case TITULO -> Comparator.comparing(PedidoResponse::titulo);
-                case PRAZO -> Comparator.comparing(
-                        this::getMenorPrazo,
-                        Comparator.nullsLast(Timestamp::compareTo)
-                );
-            };
-        }
+        Comparator<PedidoResponse> comparator = switch (ordenacao) {
+            case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
+            case TITULO -> Comparator.comparing(PedidoResponse::titulo);
+            case PRAZO -> Comparator.comparing(
+                    PedidoResponse::dataPrazo,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            );
+            case null -> Comparator.comparing(PedidoResponse::titulo);
+        };
 
         return snapshot.getDocuments()
-            .stream()
-            .map(doc -> doc.toObject(Pedidos.class))
-            .map(pedidosMapper::toDto)
-            .filter(pedido ->
-                    titulo == null ||
-                    (
-                        pedido.titulo() != null &&
-                        pedido.titulo()
-                                .toLowerCase()
-                                .contains(titulo.toLowerCase())
-                    )
-            )
-            .sorted(comparator)
-            .toList();
+                .stream()
+                .map(doc -> doc.toObject(Pedidos.class))
+                .map(pedidosMapper::toDto)
+                .filter(p ->
+                        titulo == null ||
+                        p.titulo().toLowerCase().contains(titulo.toLowerCase())
+                )
+                .sorted(comparator)
+                .toList();
     }
 
     public PedidoResponse atualizarPedido(
@@ -142,67 +101,26 @@ public class PedidosService {
             PedidoRequestUpdate request
     ) throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = getDocumentSnapshots(
-                "pedidos",
-                id,
-                "Não foi possível encontrar o pedido"
-        );
-
-        Pedidos pedido = snapshot.getDocuments()
-                .getFirst()
-                .toObject(Pedidos.class);
+        Pedidos pedido = getPedidoById(id);
 
         pedidosMapper.updateFromRequest(request, pedido);
 
-        if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
-            throw new RuntimeException(
-                    "O pedido deve possuir ao menos um item"
-            );
-        }
-
         if (request.idCliente() != null) {
-
-            QuerySnapshot clienteSnapshot = getDocumentSnapshots(
-                    "clientes",
-                    request.idCliente(),
-                    "Não foi possível encontrar o cliente"
-            );
-
-            Clientes cliente = clienteSnapshot.getDocuments()
-                    .getFirst()
-                    .toObject(Clientes.class);
-
+            Clientes cliente = getClienteById(request.idCliente());
             pedido.setNomeCliente(cliente.getNome());
         }
 
         recalcularPedido(pedido);
 
         firestore.collection("pedidos")
-                .document(pedido.getId())
+                .document(id)
                 .set(pedido);
 
         return pedidosMapper.toDto(pedido);
     }
 
-    public List<PedidoResponse> getPedidosByCliente(String idCliente)
+    public void deletarPedidos(String id, SenhaRequest request)
             throws ExecutionException, InterruptedException {
-
-        QuerySnapshot snapshot = firestore.collection("pedidos")
-                .whereEqualTo("idCliente", idCliente)
-                .get()
-                .get();
-
-        return snapshot.getDocuments()
-                .stream()
-                .map(doc -> doc.toObject(Pedidos.class))
-                .map(pedidosMapper::toDto)
-                .toList();
-    }
-
-    public void deletarPedidos(
-            String id,
-            SenhaRequest request
-    ) throws ExecutionException, InterruptedException {
 
         String idUsuario = SecurityContextHolder
                 .getContext()
@@ -210,28 +128,10 @@ public class PedidosService {
                 .getPrincipal()
                 .toString();
 
-        QuerySnapshot snapshot = firestore.collection("usuarios")
-                .whereEqualTo("id", idUsuario)
-                .get()
-                .get();
+        Usuarios usuario = getUsuarioById(idUsuario);
 
-        if (snapshot.isEmpty()) {
-            throw new EntityNotFoundException(
-                    "Não foi possível encontrar o usuário"
-            );
-        }
-
-        Usuarios usuario = snapshot.getDocuments()
-                .getFirst()
-                .toObject(Usuarios.class);
-
-        if (!passwordEncoder.matches(
-                request.senha(),
-                usuario.getSenha()
-        )) {
-            throw new LoginInvalidException(
-                    "Não foi possível validar a requisição"
-            );
+        if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
+            throw new LoginInvalidException("Senha inválida");
         }
 
         firestore.collection("pedidos")
@@ -250,10 +150,10 @@ public class PedidosService {
                 .mapToDouble(ItemsPedido::getValor)
                 .sum();
 
-        double pagamentoAntecipado =
-                pedido.getPagamentoAntecipado() == null
-                        ? 0.0
-                        : pedido.getPagamentoAntecipado();
+        double pagamentoAntecipado = Objects.requireNonNullElse(
+                pedido.getPagamentoAntecipado(),
+                0.0
+        );
 
         if (pagamentoAntecipado > orcamento) {
             throw new RuntimeException(
@@ -266,22 +166,53 @@ public class PedidosService {
         pedido.setSaldo(orcamento - pagamentoAntecipado);
     }
 
-    private QuerySnapshot getDocumentSnapshots(
-            String colecao,
-            String id,
-            String message
-    ) throws ExecutionException, InterruptedException {
 
-        ApiFuture<QuerySnapshot> future = firestore.collection(colecao)
-                .whereEqualTo("id", id)
+    private Pedidos getPedidoById(String id)
+            throws ExecutionException, InterruptedException {
+
+        var doc = firestore.collection("pedidos")
+                .document(id)
+                .get()
                 .get();
 
-        QuerySnapshot snapshot = future.get();
-
-        if (snapshot.isEmpty()) {
-            throw new EntityNotFoundException(message);
+        if (!doc.exists()) {
+            throw new EntityNotFoundException("Pedido não encontrado");
         }
 
-        return snapshot;
+        return doc.toObject(Pedidos.class);
+    }
+
+    private Clientes getClienteById(String id)
+            throws ExecutionException, InterruptedException {
+
+        var snapshot = firestore.collection("clientes")
+                .whereEqualTo("id", id)
+                .get()
+                .get();
+
+        if (snapshot.isEmpty()) {
+            throw new EntityNotFoundException("Cliente não encontrado");
+        }
+
+        return snapshot.getDocuments()
+                .getFirst()
+                .toObject(Clientes.class);
+    }
+
+    private Usuarios getUsuarioById(String id)
+            throws ExecutionException, InterruptedException {
+
+        var snapshot = firestore.collection("usuarios")
+                .whereEqualTo("id", id)
+                .get()
+                .get();
+
+        if (snapshot.isEmpty()) {
+            throw new EntityNotFoundException("Usuário não encontrado");
+        }
+
+        return snapshot.getDocuments()
+                .getFirst()
+                .toObject(Usuarios.class);
     }
 }
