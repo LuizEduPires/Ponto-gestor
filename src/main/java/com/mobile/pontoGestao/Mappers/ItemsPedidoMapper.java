@@ -1,6 +1,7 @@
 package com.mobile.pontoGestao.Mappers;
 
 import com.mobile.pontoGestao.Dtos.Request.ItemsPedidoRequest;
+import com.mobile.pontoGestao.Dtos.Request.ItemsPedidoUpdateRequest;
 import com.mobile.pontoGestao.Dtos.Response.ItemsPedidoResponse;
 import com.mobile.pontoGestao.Models.ItemsPedido;
 import org.mapstruct.Mapper;
@@ -13,6 +14,11 @@ public interface ItemsPedidoMapper {
     @Mapping(target = "dataEntrega", expression = "java(toTimestamp(request.dataEntrega()))")
     @Mapping(target = "dataProva", expression = "java(toTimestamp(request.dataProva()))")
     ItemsPedido toModel(ItemsPedidoRequest request);
+
+    @Mapping(target = "dataPrazo", expression = "java(toTimestamp(request.dataPrazo()))")
+    @Mapping(target = "dataEntrega", expression = "java(toTimestamp(request.dataEntrega()))")
+    @Mapping(target = "dataProva", expression = "java(toTimestamp(request.dataProva()))")
+    ItemsPedido toModel(ItemsPedidoUpdateRequest request);
 
     @Mapping(target = "dataPrazo", expression = "java(toLocalDateTime(item.getDataPrazo()))")
     @Mapping(target = "dataEntrega", expression = "java(toLocalDateTime(item.getDataEntrega()))")
