@@ -2,7 +2,6 @@ package com.mobile.pontoGestao.Models;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 import com.google.cloud.Timestamp;
 

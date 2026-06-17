@@ -6,10 +6,19 @@ import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
 import com.mobile.pontoGestao.Models.Pedidos;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {ItemsPedidoMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
 public interface PedidosMapper {
+
     Pedidos toModel(PedidoRequest request);
+
     PedidoResponse toDto(Pedidos pedido);
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updatePedido(PedidoRequestUpdate request,@MappingTarget Pedidos pedido);
+
+    void updateFromRequest(
+            PedidoRequestUpdate request,
+            @MappingTarget Pedidos pedido
+    );
 }
