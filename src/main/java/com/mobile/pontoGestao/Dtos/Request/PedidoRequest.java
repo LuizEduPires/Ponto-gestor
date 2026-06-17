@@ -8,7 +8,7 @@ import java.util.List;
 
 public record PedidoRequest(
 
-        @NotBlank(message = "Titulo não pode ser vazio ou nulo")
+        @NotBlank(message = "Título não pode ser vazio ou nulo")
         String titulo,
 
         @Valid
@@ -18,9 +18,10 @@ public record PedidoRequest(
         @NotBlank(message = "O id do cliente não pode ser nulo ou vazio")
         String idCliente,
 
-        @Min(value = 0)
+        @NotNull(message = "Pagamento antecipado não pode ser nulo")
+        @PositiveOrZero(message = "Pagamento antecipado não pode ser negativo")
         Double pagamentoAntecipado,
 
-        @NotNull
+        @NotNull(message = "Tipo de pagamento é obrigatório")
         TipoPagamento tipoPagamento
 ) {}
