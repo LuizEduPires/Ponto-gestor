@@ -8,8 +8,15 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ItemsPedidoMapper {
 
-    @Mapping(target = "dataPrazo", ignore = true)
-    @Mapping(target = "dataEntrega", ignore = true)
-    @Mapping(target = "dataProva", ignore = true)
+    @Mapping(target = "dataPrazo", expression = "java(toTimestamp(request.dataPrazo()))")
+    @Mapping(target = "dataEntrega", expression = "java(toTimestamp(request.dataEntrega()))")
+    @Mapping(target = "dataProva", expression = "java(toTimestamp(request.dataProva()))")
     ItemsPedido toModel(ItemsPedidoRequest request);
+
+    default com.google.cloud.Timestamp toTimestamp(java.time.LocalDateTime dateTime) {
+        if (dateTime == null) return null;
+        return com.google.cloud.Timestamp.of(java.util.Date.from(
+                dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant()
+        ));
+    }
 }
