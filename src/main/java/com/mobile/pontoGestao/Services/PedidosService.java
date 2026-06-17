@@ -3,6 +3,7 @@ package com.mobile.pontoGestao.Services;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.Timestamp;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
 import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
@@ -21,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -74,7 +77,7 @@ public class PedidosService {
         Comparator<PedidoResponse> comparator = switch (ordenacao) {
             case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
             case TITULO -> Comparator.comparing(PedidoResponse::titulo);
-            case PRAZO -> Comparator.comparing(PedidoResponse::titulo); // fallback seguro
+            case PRAZO -> Comparator.comparing(PedidoResponse::titulo);
             case null -> Comparator.comparing(PedidoResponse::titulo);
         };
 
@@ -171,6 +174,12 @@ public class PedidosService {
         pedido.setOrcamento(orcamento);
         pedido.setQuantidade(pedido.getItens().size());
         pedido.setSaldo(orcamento - pagamentoAntecipado);
+    }
+
+    private Timestamp convert(LocalDateTime dateTime) {
+        return Timestamp.of(java.util.Date.from(
+                dateTime.atZone(ZoneId.systemDefault()).toInstant()
+        ));
     }
 
     private Pedidos getPedidoById(String id)
