@@ -2,7 +2,6 @@ package com.mobile.pontoGestao.Controllers;
 
 import com.mobile.pontoGestao.Dtos.Request.ClienteRequest;
 import com.mobile.pontoGestao.Dtos.Request.ClienteUpdateRequest;
-import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Response.ClienteResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoCliente;
 import com.mobile.pontoGestao.Services.ClientesService;
@@ -60,13 +59,12 @@ public class ClientesController {
         return clientesService.atualizarCliente(id, request);
     }
 
-    @PostMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletarCliente(
-            @PathVariable String id,
-            @Valid @RequestBody SenhaRequest request
+            @PathVariable String id
     ) throws ExecutionException, InterruptedException {
 
-        clientesService.deletarCliente(id, request);
+        clientesService.deletarCliente(id);
     }
 }
