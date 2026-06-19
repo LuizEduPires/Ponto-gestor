@@ -4,12 +4,15 @@ import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioRequest;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioToken;
 import com.mobile.pontoGestao.Dtos.Request.UsuarioUpdate;
+import com.mobile.pontoGestao.Dtos.Request.ValidarSenhaRequest;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioLogin;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioResponse;
+import com.mobile.pontoGestao.Dtos.Response.ValidarSenhaResponse;
 import com.mobile.pontoGestao.Services.UsuariosService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,13 +73,21 @@ public class UsuariosController {
         return service.atualizarSenha(request);
     }
 
-    @PostMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletarUsuario(
-            @PathVariable String id,
-            @RequestBody @Valid SenhaRequest request
+            @PathVariable String id
     ) throws ExecutionException, InterruptedException {
 
-        service.deletarUsuario(id, request);
+        service.deletarUsuario(id);
+    }
+
+    @PostMapping("/validar-senha")
+    public ResponseEntity<ValidarSenhaResponse> validarSenha(
+            @RequestBody @Valid ValidarSenhaRequest request
+    ) {
+        boolean isValido = service.validarSenha(request);
+        
+        return ResponseEntity.ok(new ValidarSenhaResponse(isValido));
     }
 }

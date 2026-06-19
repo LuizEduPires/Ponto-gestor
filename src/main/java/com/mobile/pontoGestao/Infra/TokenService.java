@@ -27,7 +27,6 @@ public class TokenService {
                     .withIssuer("ponto-gestao")
                     .withSubject(usuario.getId())
                     .withExpiresAt(genExpiration())
-                    .withClaim("role", usuario.getPermissao().name())
                     .sign(algorithm);
 
         } catch (JWTCreationException ex) {
@@ -48,23 +47,6 @@ public class TokenService {
 
         } catch (JWTVerificationException ex) {
             throw new RuntimeException("Token inválido ou expirado", ex);
-        }
-    }
-
-    public String getPermissao(String token) {
-
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-            return JWT.require(algorithm)
-                    .withIssuer("ponto-gestao")
-                    .build()
-                    .verify(token)
-                    .getClaim("role")
-                    .asString();
-
-        } catch (JWTVerificationException ex) {
-            return "";
         }
     }
 
