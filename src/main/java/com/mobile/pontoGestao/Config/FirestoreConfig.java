@@ -23,57 +23,26 @@ public class FirestoreConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-
         FirebaseOptions options;
-
-        File renderSecret =
-                new File("/etc/secrets/servicefirebase.json");
+        File renderSecret = new File("/etc/secrets/servicefirebase.json");
 
         if (renderSecret.exists()) {
-
-            try (InputStream serviceAccount =
-                         new FileInputStream(renderSecret)) {
-
+            try (InputStream serviceAccount = new FileInputStream(renderSecret)) {
                 options = FirebaseOptions.builder()
-                        .setCredentials(
-                                GoogleCredentials.fromStream(
-                                        serviceAccount
-                                )
-                        )
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .build();
             }
-
-            log.info(
-                    "Firebase conectado usando o Secret File do Render."
-            );
-
+            log.info("Firebase conectado usando o Secret File do Render.");
         } else {
-
-            try (InputStream serviceAccount =
-                         getClass()
-                                 .getClassLoader()
-                                 .getResourceAsStream(
-                                         "servicefirebase.json"
-                                 )) {
-
+            try (InputStream serviceAccount = this.getClass().getResourceAsStream("/servicefirebase.json")) {
                 if (serviceAccount == null) {
-                    throw new IllegalStateException(
-                            "Arquivo servicefirebase.json não encontrado."
-                    );
+                    throw new IllegalStateException("Arquivo servicefirebase.json não encontrado no classpath.");
                 }
-
                 options = FirebaseOptions.builder()
-                        .setCredentials(
-                                GoogleCredentials.fromStream(
-                                        serviceAccount
-                                )
-                        )
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .build();
             }
-
-            log.info(
-                    "Firebase conectado usando o arquivo local."
-            );
+            log.info("Firebase conectado usando o arquivo local.");
         }
 
         if (FirebaseApp.getApps().isEmpty()) {
