@@ -7,5 +7,7 @@ public record UsuarioUpdate(
         String nome,
 
         @Email(message = "Email não está em um formato válido")
-        String email
+        String email,
+
+        String permissao
 ) {}

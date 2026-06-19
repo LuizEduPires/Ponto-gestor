@@ -9,6 +9,7 @@ import com.mobile.pontoGestao.Dtos.Response.UsuarioResponse;
 import com.mobile.pontoGestao.Erros.EntityAlreadyExistsException;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
 import com.mobile.pontoGestao.Erros.LoginInvalidException;
+import com.mobile.pontoGestao.Erros.UnauthorizedException;
 import com.mobile.pontoGestao.Infra.TokenService;
 import com.mobile.pontoGestao.Mappers.UsuarioMapper;
 import com.mobile.pontoGestao.Models.Usuarios;
@@ -95,6 +96,12 @@ public class UsuariosService {
             throws ExecutionException, InterruptedException {
 
         Usuarios usuario = getUsuarioAutenticado();
+
+        if ("FUNCIONARIO".equals(usuario.getPermissao()) && update.permissao() != null) {
+            if ("ADMIN".equals(update.permissao())) {
+                throw new UnauthorizedException("Funcionários não podem se promover a Administrador.");
+            }
+        }
 
         if (update.email() != null
                 && !update.email().equals(usuario.getEmail())) {
