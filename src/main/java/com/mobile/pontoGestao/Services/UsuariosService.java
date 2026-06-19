@@ -3,24 +3,21 @@ package com.mobile.pontoGestao.Services;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioRequest;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioToken;
-import com.mobile.pontoGestao.Dtos.Request.UsuarioUpdate;
+import com.mobile.pontoGestao.Dtos.Request.*;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioLogin;
 import com.mobile.pontoGestao.Dtos.Response.UsuarioResponse;
 import com.mobile.pontoGestao.Erros.EntityAlreadyExistsException;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
 import com.mobile.pontoGestao.Erros.LoginInvalidException;
+import com.mobile.pontoGestao.Erros.UnauthorizedException;
 import com.mobile.pontoGestao.Infra.TokenService;
 import com.mobile.pontoGestao.Mappers.UsuarioMapper;
 import com.mobile.pontoGestao.Models.Usuarios;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -33,80 +30,120 @@ public class UsuariosService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
-    public UsuarioResponse criarUsuario(UsuarioRequest request) throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = getUsuarioByEmail(request.email());
+    public UsuarioResponse criarUsuario(UsuarioRequest request)
+            throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = future.get();
+        QuerySnapshot snapshot = getUsuarioByEmail(
+                request.email()
+        ).get();
 
-        if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já esta sendo utilizado.");
+        if (!snapshot.isEmpty()) {
+            throw new EntityAlreadyExistsException(
+                    "Email já está sendo utilizado."
+            );
+        }
 
         Usuarios usuario = usuarioMapper.toModel(request);
-        String novaSenha = passwordEncoder.encode(usuario.getSenha());
-        usuario.setSenha(novaSenha);
-        firestore.collection("usuarios").document(usuario.getId()).set(usuario);
+
+        usuario.setSenha(
+                passwordEncoder.encode(usuario.getSenha())
+        );
+
+        firestore.collection("usuarios")
+                .document(usuario.getId())
+                .set(usuario);
 
         return usuarioMapper.toResponse(usuario);
     }
 
-    public UsuarioToken criarToken(UsuarioLogin login) throws ExecutionException, InterruptedException, FirebaseAuthException {
-        ApiFuture<QuerySnapshot> future = getUsuarioByEmail(login.email());
+    public UsuarioToken criarToken(UsuarioLogin login)
+        throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = future.get();
+                QuerySnapshot loginSnapshot = getUsuarioByEmail(login.email()).get();
 
-        if (snapshot.isEmpty()) throw new LoginInvalidException("Email ou senha invalidos.");
+                if (loginSnapshot.isEmpty()) {
+                        throw new LoginInvalidException("Email ou senha inválidos.");
+                }
 
-        Usuarios usuario = convertDocumentToUsuario(snapshot);
+                Usuarios usuario = convertDocumentToUsuario(loginSnapshot);
 
-        if (!passwordEncoder.matches(login.senha(), usuario.getSenha()))  throw new LoginInvalidException("Email ou senha invalidos.");
+                if (!passwordEncoder.matches(login.senha(), usuario.getSenha())) {
+                        throw new LoginInvalidException("Email ou senha inválidos.");
+                }
 
-        String token = tokenService.generateToken(usuario);
+                String token = tokenService.generateToken(usuario);
 
-        return new UsuarioToken(token);
+                return new UsuarioToken(token);
+        }
+
+    public UsuarioResponse atualizarSenha(SenhaRequest senha)
+            throws ExecutionException, InterruptedException {
+
+        Usuarios usuario = getUsuarioAutenticado();
+
+        usuario.setSenha(
+                passwordEncoder.encode(senha.senha())
+        );
+
+        firestore.collection("usuarios")
+                .document(usuario.getId())
+                .set(usuario);
+
+        return usuarioMapper.toResponse(usuario);
     }
 
-    public UsuarioResponse atualizarUsuario(UsuarioUpdate update) throws ExecutionException, InterruptedException {
-        String id = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal().toString();
-        ApiFuture<QuerySnapshot> future = getUsuarioById(id);
-        QuerySnapshot snapshot = future.get();
-        Usuarios usuario = convertDocumentToUsuario(snapshot);
+    public UsuarioResponse atualizarUsuario(UsuarioUpdate update)
+            throws ExecutionException, InterruptedException {
 
-        if (update.email() != null) {
-            future = getUsuarioByEmail(update.email());
-            snapshot = future.get();
-            if (!snapshot.isEmpty()) throw new EntityAlreadyExistsException("Email já esta sendo utilizado.");
+        Usuarios usuario = getUsuarioAutenticado();
+
+        if ("FUNCIONARIO".equals(usuario.getPermissao()) && update.permissao() != null) {
+            if ("ADMIN".equals(update.permissao())) {
+                throw new UnauthorizedException("Funcionários não podem se promover a Administrador.");
+            }
+        }
+
+        if (update.email() != null
+                && !update.email().equals(usuario.getEmail())) {
+
+            QuerySnapshot snapshot = getUsuarioByEmail(
+                    update.email()
+            ).get();
+
+            if (!snapshot.isEmpty()) {
+                throw new EntityAlreadyExistsException(
+                        "Email já está sendo utilizado."
+                );
+            }
         }
 
         usuarioMapper.updateUsuario(update, usuario);
 
-        firestore.collection("usuarios").document(usuario.getId()).set(usuario);
+        firestore.collection("usuarios")
+                .document(usuario.getId())
+                .set(usuario);
 
         return usuarioMapper.toResponse(usuario);
     }
 
-    private static Usuarios convertDocumentToUsuario(QuerySnapshot snapshot) {
-        if (snapshot.isEmpty()) throw new EntityNotFoundException("Não foi possivel encontrar o usuario");
-        return snapshot.getDocuments().getFirst().toObject(Usuarios.class);
-    }
+    public UsuarioResponse getUsuario(String id)
+            throws ExecutionException, InterruptedException {
 
-    private ApiFuture<QuerySnapshot> getUsuarioByEmail(String login) {
-        return firestore.collection("usuarios")
-                .whereEqualTo("email", login)
-                .get();
-    }
+        QuerySnapshot snapshot = getUsuarioById(id).get();
 
-    public UsuarioResponse getUsuario(String id) throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = getUsuarioById(id);
-        QuerySnapshot snapshot = future.get();
         Usuarios usuario = convertDocumentToUsuario(snapshot);
+
         return usuarioMapper.toResponse(usuario);
     }
 
-    public List<UsuarioResponse> getUsuarios() throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = firestore.collection("usuarios").get();
-        QuerySnapshot snapshot = future.get();
+    public List<UsuarioResponse> getUsuarios()
+            throws ExecutionException, InterruptedException {
+
+        QuerySnapshot snapshot = firestore
+                .collection("usuarios")
+                .get()
+                .get();
+
         return snapshot.getDocuments()
                 .stream()
                 .map(doc -> doc.toObject(Usuarios.class))
@@ -114,13 +151,79 @@ public class UsuariosService {
                 .toList();
     }
 
-    private ApiFuture<QuerySnapshot> getUsuarioById(String id) {
+    public void deletarUsuario(
+            String id,
+            SenhaRequest request
+    ) throws ExecutionException, InterruptedException {
+
+        Usuarios usuarioLogado = getUsuarioAutenticado();
+
+        if (!passwordEncoder.matches(
+                request.senha(),
+                usuarioLogado.getSenha()
+        )) {
+            throw new LoginInvalidException(
+                    "Não foi possível validar a requisição"
+            );
+        }
+
+        QuerySnapshot snapshot = getUsuarioById(id).get();
+
+        if (snapshot.isEmpty()) {
+            throw new EntityNotFoundException(
+                    "Não foi possível encontrar o usuário"
+            );
+        }
+
+        firestore.collection("usuarios")
+                .document(id)
+                .delete();
+    }
+
+    private Usuarios getUsuarioAutenticado()
+            throws ExecutionException, InterruptedException {
+
+        String id = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal()
+                .toString();
+
+        QuerySnapshot snapshot = getUsuarioById(id).get();
+
+        return convertDocumentToUsuario(snapshot);
+    }
+
+    private static Usuarios convertDocumentToUsuario(
+            QuerySnapshot snapshot
+    ) {
+
+        if (snapshot.isEmpty()) {
+            throw new EntityNotFoundException(
+                    "Não foi possível encontrar o usuário"
+            );
+        }
+
+        return snapshot.getDocuments()
+                .getFirst()
+                .toObject(Usuarios.class);
+    }
+
+    private ApiFuture<QuerySnapshot> getUsuarioByEmail(
+            String email
+    ) {
+
         return firestore.collection("usuarios")
-                .whereEqualTo("id", id)
+                .whereEqualTo("email", email)
                 .get();
     }
 
-    public void deletarUsuario(String id) {
-        firestore.collection("usuarios").document(id).delete();
+    private ApiFuture<QuerySnapshot> getUsuarioById(
+            String id
+    ) {
+
+        return firestore.collection("usuarios")
+                .whereEqualTo("id", id)
+                .get();
     }
 }

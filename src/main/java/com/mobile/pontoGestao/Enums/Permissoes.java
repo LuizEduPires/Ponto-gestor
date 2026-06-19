@@ -3,8 +3,7 @@ package com.mobile.pontoGestao.Enums;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 @JsonFormat(shape = JsonFormat.Shape.STRING)
-public enum StatusPedido {
-    PENDENTE,
-    EXECUTANDO,
-    CONCLUIDO
+public enum Permissoes {
+    ADMIN,
+    FUNCIONARIO
 }

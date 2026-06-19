@@ -5,6 +5,8 @@ import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,31 +18,63 @@ import java.io.InputStream;
 @Configuration
 public class FirestoreConfig {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(FirestoreConfig.class);
+
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        InputStream serviceAccount;
 
-        // Caminho padrão onde o Render injeta os "Secret Files"
-        File renderSecret = new File("/etc/secrets/servicefirebase.json");
+        FirebaseOptions options;
+
+        File renderSecret =
+                new File("/etc/secrets/servicefirebase.json");
 
         if (renderSecret.exists()) {
-            // Se existir, estamos rodando na nuvem do Render
-            serviceAccount = new FileInputStream(renderSecret);
-            System.out.println("✅ Firebase conectado usando o cofre do Render!");
-        } else {
-            // Se não existir, estamos rodando localmente no seu computador (IntelliJ)
-            serviceAccount = getClass().getClassLoader().getResourceAsStream("servicefirebase.json");
 
-            // Trava de segurança extra para avisar se o arquivo realmente sumiu
-            if (serviceAccount == null) {
-                throw new RuntimeException("❌ ERRO GRAVE: Arquivo servicefirebase.json não encontrado em nenhum lugar!");
+            try (InputStream serviceAccount =
+                         new FileInputStream(renderSecret)) {
+
+                options = FirebaseOptions.builder()
+                        .setCredentials(
+                                GoogleCredentials.fromStream(
+                                        serviceAccount
+                                )
+                        )
+                        .build();
             }
-            System.out.println("✅ Firebase conectado usando o arquivo local!");
-        }
 
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
+            log.info(
+                    "Firebase conectado usando o Secret File do Render."
+            );
+
+        } else {
+
+            try (InputStream serviceAccount =
+                         getClass()
+                                 .getClassLoader()
+                                 .getResourceAsStream(
+                                         "servicefirebase.json"
+                                 )) {
+
+                if (serviceAccount == null) {
+                    throw new IllegalStateException(
+                            "Arquivo servicefirebase.json não encontrado."
+                    );
+                }
+
+                options = FirebaseOptions.builder()
+                        .setCredentials(
+                                GoogleCredentials.fromStream(
+                                        serviceAccount
+                                )
+                        )
+                        .build();
+            }
+
+            log.info(
+                    "Firebase conectado usando o arquivo local."
+            );
+        }
 
         if (FirebaseApp.getApps().isEmpty()) {
             return FirebaseApp.initializeApp(options);
@@ -50,7 +84,10 @@ public class FirestoreConfig {
     }
 
     @Bean
-    public Firestore firestore(FirebaseApp firebaseApp) {
+    public Firestore firestore(
+            FirebaseApp firebaseApp
+    ) {
+
         return FirestoreClient.getFirestore(firebaseApp);
     }
 }
