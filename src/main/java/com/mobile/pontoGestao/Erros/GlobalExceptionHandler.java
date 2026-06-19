@@ -89,4 +89,10 @@ public class GlobalExceptionHandler {
         String message = ex.getLocalizedMessage();
         return new ResponseEntity<>(new MessageResponseDto(message),HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<MessageResponseDto> handleUnauthorized(UnauthorizedException ex) {
+        String message = ex.getLocalizedMessage();
+        return new ResponseEntity<>(new MessageResponseDto(message), HttpStatus.FORBIDDEN);
+    }
 }

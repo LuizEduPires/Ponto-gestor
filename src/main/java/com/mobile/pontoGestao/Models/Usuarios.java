@@ -11,5 +11,5 @@ public class Usuarios {
     private String nome;
     private String email;
     private String senha;
-    private Permissoes permissao;
+    private Permissoes permissao = Permissoes.FUNCIONARIO;
 }
