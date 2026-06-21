@@ -110,14 +110,19 @@ public class PedidosService {
                 .toList();
     }
 
-    public PedidoResponse atualizarPedido(
-            String id,
-            PedidoRequestUpdate request
-    ) throws ExecutionException, InterruptedException {
+    public PedidoResponse atualizarPedido(String id, PedidoRequestUpdate request) 
+        throws ExecutionException, InterruptedException {
 
         Pedidos pedido = getPedidoById(id);
+        List<ItemsPedido> itensAntigos = pedido.getItens();
 
         pedidosMapper.updateFromRequest(request, pedido);
+
+        if (request.itens() == null) { 
+            pedido.setItens(itensAntigos);
+        } else {
+            preservarImagensDosItens(pedido.getItens(), itensAntigos);
+        }
 
         if (request.idCliente() != null) {
             Clientes cliente = getClienteById(request.idCliente());
@@ -127,11 +132,11 @@ public class PedidosService {
         recalcularPedido(pedido);
 
         firestore.collection("pedidos")
-                .document(id)
-                .set(pedido);
+            .document(id)
+            .set(pedido);
 
         return pedidosMapper.toDto(pedido);
-    }
+}
 
     public void deletarPedidos(String id)
             throws ExecutionException, InterruptedException {
@@ -202,5 +207,23 @@ public class PedidosService {
         return snapshot.getDocuments()
                 .getFirst()
                 .toObject(Clientes.class);
+    }
+
+    private void preservarImagensDosItens(List<ItemsPedido> itensNovos, List<ItemsPedido> itensAntigos) {
+        if (itensAntigos == null || itensNovos == null) return;
+
+        for (ItemsPedido itemNovo : itensNovos) {
+            if (itemNovo.getImagem() != null && !itemNovo.getImagem().isEmpty()) {
+                continue;
+            }
+
+            itensAntigos.stream()
+                .filter(antigo -> antigo.getTitulo() != null && antigo.getTitulo().equalsIgnoreCase(itemNovo.getTitulo()))
+                .filter(antigo -> antigo.getTipo() == itemNovo.getTipo())
+                .findFirst()
+                .ifPresent(antigo -> {
+                    itemNovo.setImagem(antigo.getImagem());
+                });
+        }
     }
 }
