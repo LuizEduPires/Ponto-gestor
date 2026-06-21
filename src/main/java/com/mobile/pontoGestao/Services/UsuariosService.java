@@ -10,6 +10,7 @@ import com.mobile.pontoGestao.Dtos.Response.UsuarioResponse;
 import com.mobile.pontoGestao.Erros.EntityAlreadyExistsException;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
 import com.mobile.pontoGestao.Erros.LoginInvalidException;
+import com.mobile.pontoGestao.Erros.UnauthorizedException;
 import com.mobile.pontoGestao.Infra.TokenService;
 import com.mobile.pontoGestao.Mappers.UsuarioMapper;
 import com.mobile.pontoGestao.Models.Usuarios;
@@ -72,9 +73,20 @@ public class UsuariosService {
                 throw new LoginInvalidException("Email ou senha inválidos.");
         }
 
-        String token = tokenService.generateToken(usuario);
+    public UsuarioResponse atualizarSenha(SenhaRequest senha)
+            throws ExecutionException, InterruptedException {
 
-        return new UsuarioToken(token);
+        Usuarios usuario = getUsuarioAutenticado();
+
+        usuario.setSenha(
+                passwordEncoder.encode(senha.senha())
+        );
+
+        firestore.collection("usuarios")
+                .document(usuario.getId())
+                .set(usuario);
+
+        return usuarioMapper.toResponse(usuario);
     }
 
     public Boolean validarSenha(ValidarSenhaRequest request) {
@@ -88,6 +100,7 @@ public class UsuariosService {
 
         if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
                 return false; 
+
         }
 
         return true;
@@ -147,6 +160,7 @@ public class UsuariosService {
         }
 
         Usuarios usuario = document.toObject(Usuarios.class);
+      
         return usuarioMapper.toResponse(usuario);
     }
 
@@ -169,6 +183,7 @@ public class UsuariosService {
         DocumentSnapshot document = firestore.collection("usuarios").document(id).get().get();
 
         if (!document.exists()) {
+
             throw new EntityNotFoundException(
                     "Não foi possível encontrar o usuário"
             );

@@ -1,5 +1,6 @@
 package com.mobile.pontoGestao.Dtos.Request;
 
+import com.mobile.pontoGestao.Enums.Permissoes;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,5 +16,6 @@ public record UsuarioRequest(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
                 message = "A senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial"
         )
-        String senha) {
+        String senha,
+        Permissoes permissao) {
 }

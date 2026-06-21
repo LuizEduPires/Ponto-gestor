@@ -2,6 +2,7 @@ package com.mobile.pontoGestao.Controllers;
 
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
+import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoPedido;
 import com.mobile.pontoGestao.Enums.StatusPedido;

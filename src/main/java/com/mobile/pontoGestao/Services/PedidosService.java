@@ -3,18 +3,24 @@ package com.mobile.pontoGestao.Services;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
+
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
 import com.mobile.pontoGestao.Dtos.Response.ItemsPedidoResponse;
 import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
+
 import com.mobile.pontoGestao.Enums.OrdenacaoPedido;
 import com.mobile.pontoGestao.Enums.StatusPedido;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
+
 import com.mobile.pontoGestao.Mappers.PedidosMapper;
 import com.mobile.pontoGestao.Models.Clientes;
 import com.mobile.pontoGestao.Models.ItemsPedido;
 import com.mobile.pontoGestao.Models.Pedidos;
+import com.mobile.pontoGestao.Models.Usuarios;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +35,7 @@ public class PedidosService {
 
     private final PedidosMapper pedidosMapper;
     private final Firestore firestore;
+    private final PasswordEncoder passwordEncoder;
 
     public PedidoResponse criarPedido(PedidoRequest request)
             throws ExecutionException, InterruptedException {
@@ -70,7 +77,7 @@ public class PedidosService {
         if (ordenacao == null) {
             ordenacao = OrdenacaoPedido.TITULO;
         }
-
+      
         Comparator<PedidoResponse> comparator = switch (ordenacao) {
             case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
             case TITULO -> Comparator.comparing(PedidoResponse::titulo);
@@ -203,6 +210,7 @@ public class PedidosService {
         if (snapshot.isEmpty()) {
             throw new EntityNotFoundException("Cliente não encontrado");
         }
+
 
         return snapshot.getDocuments()
                 .getFirst()
