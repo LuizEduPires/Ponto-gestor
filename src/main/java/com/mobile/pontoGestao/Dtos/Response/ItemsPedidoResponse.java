@@ -1,5 +1,6 @@
 package com.mobile.pontoGestao.Dtos.Response;
 
+import com.mobile.pontoGestao.Enums.StatusItemPedido;
 import com.mobile.pontoGestao.Enums.TipoItemPedido;
 
 import java.time.LocalDateTime;
@@ -13,5 +14,6 @@ public record ItemsPedidoResponse(
         LocalDateTime dataPrazo,
         LocalDateTime dataEntrega,
         LocalDateTime dataProva,
+        StatusItemPedido statusItemPedido,
         TipoItemPedido tipo
 ) {}
