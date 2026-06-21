@@ -3,23 +3,24 @@ package com.mobile.pontoGestao.Services;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QuerySnapshot;
+
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequest;
 import com.mobile.pontoGestao.Dtos.Request.PedidoRequestUpdate;
-import com.mobile.pontoGestao.Dtos.Request.SenhaRequest;
 import com.mobile.pontoGestao.Dtos.Response.ItemsPedidoResponse;
 import com.mobile.pontoGestao.Dtos.Response.PedidoResponse;
+
 import com.mobile.pontoGestao.Enums.OrdenacaoPedido;
 import com.mobile.pontoGestao.Enums.StatusPedido;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
-import com.mobile.pontoGestao.Erros.LoginInvalidException;
+
 import com.mobile.pontoGestao.Mappers.PedidosMapper;
 import com.mobile.pontoGestao.Models.Clientes;
 import com.mobile.pontoGestao.Models.ItemsPedido;
 import com.mobile.pontoGestao.Models.Pedidos;
 import com.mobile.pontoGestao.Models.Usuarios;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -73,6 +74,10 @@ public class PedidosService {
 
         QuerySnapshot snapshot = query.get().get();
 
+        if (ordenacao == null) {
+            ordenacao = OrdenacaoPedido.TITULO;
+        }
+      
         Comparator<PedidoResponse> comparator = switch (ordenacao) {
             case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
             case TITULO -> Comparator.comparing(PedidoResponse::titulo);
@@ -83,7 +88,6 @@ public class PedidosService {
                             .min(LocalDateTime::compareTo)
                             .orElse(LocalDateTime.MAX)
             );
-            case null -> Comparator.comparing(PedidoResponse::titulo);
         };
 
         return snapshot.getDocuments()
@@ -113,14 +117,19 @@ public class PedidosService {
                 .toList();
     }
 
-    public PedidoResponse atualizarPedido(
-            String id,
-            PedidoRequestUpdate request
-    ) throws ExecutionException, InterruptedException {
+    public PedidoResponse atualizarPedido(String id, PedidoRequestUpdate request) 
+        throws ExecutionException, InterruptedException {
 
         Pedidos pedido = getPedidoById(id);
+        List<ItemsPedido> itensAntigos = pedido.getItens();
 
         pedidosMapper.updateFromRequest(request, pedido);
+
+        if (request.itens() == null) { 
+            pedido.setItens(itensAntigos);
+        } else {
+            preservarImagensDosItens(pedido.getItens(), itensAntigos);
+        }
 
         if (request.idCliente() != null) {
             Clientes cliente = getClienteById(request.idCliente());
@@ -130,26 +139,16 @@ public class PedidosService {
         recalcularPedido(pedido);
 
         firestore.collection("pedidos")
-                .document(id)
-                .set(pedido);
+            .document(id)
+            .set(pedido);
 
         return pedidosMapper.toDto(pedido);
-    }
+}
 
-    public void deletarPedidos(String id, SenhaRequest request)
+    public void deletarPedidos(String id)
             throws ExecutionException, InterruptedException {
 
-        String idUsuario = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal()
-                .toString();
-
-        Usuarios usuario = getUsuarioById(idUsuario);
-
-        if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
-            throw new LoginInvalidException("Senha inválida");
-        }
+        getPedidoById(id); 
 
         firestore.collection("pedidos")
                 .document(id)
@@ -212,25 +211,27 @@ public class PedidosService {
             throw new EntityNotFoundException("Cliente não encontrado");
         }
 
+
         return snapshot.getDocuments()
                 .getFirst()
                 .toObject(Clientes.class);
     }
 
-    private Usuarios getUsuarioById(String id)
-            throws ExecutionException, InterruptedException {
+    private void preservarImagensDosItens(List<ItemsPedido> itensNovos, List<ItemsPedido> itensAntigos) {
+        if (itensAntigos == null || itensNovos == null) return;
 
-        var snapshot = firestore.collection("usuarios")
-                .whereEqualTo("id", id)
-                .get()
-                .get();
+        for (ItemsPedido itemNovo : itensNovos) {
+            if (itemNovo.getImagem() != null && !itemNovo.getImagem().isEmpty()) {
+                continue;
+            }
 
-        if (snapshot.isEmpty()) {
-            throw new EntityNotFoundException("Usuário não encontrado");
+            itensAntigos.stream()
+                .filter(antigo -> antigo.getTitulo() != null && antigo.getTitulo().equalsIgnoreCase(itemNovo.getTitulo()))
+                .filter(antigo -> antigo.getTipo() == itemNovo.getTipo())
+                .findFirst()
+                .ifPresent(antigo -> {
+                    itemNovo.setImagem(antigo.getImagem());
+                });
         }
-
-        return snapshot.getDocuments()
-                .getFirst()
-                .toObject(Usuarios.class);
     }
 }

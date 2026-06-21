@@ -58,12 +58,11 @@ public class PedidosController {
         return pedidosService.atualizarPedido(id, request);
     }
 
-    @PostMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletarPedido(
-            @PathVariable String id,
-            @RequestBody @Valid SenhaRequest request
+            @PathVariable String id
     ) throws ExecutionException, InterruptedException {
-        pedidosService.deletarPedidos(id, request);
+        pedidosService.deletarPedidos(id);
     }
 }

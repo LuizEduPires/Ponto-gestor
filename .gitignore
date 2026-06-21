@@ -35,3 +35,5 @@ build/
 
 ### FireStore ###
 src/main/resources/*.json
+
+.env

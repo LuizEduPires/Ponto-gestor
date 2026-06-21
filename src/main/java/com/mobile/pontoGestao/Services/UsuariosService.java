@@ -1,6 +1,7 @@
 package com.mobile.pontoGestao.Services;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.mobile.pontoGestao.Dtos.Request.*;
@@ -15,6 +16,7 @@ import com.mobile.pontoGestao.Mappers.UsuarioMapper;
 import com.mobile.pontoGestao.Models.Usuarios;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -59,22 +61,50 @@ public class UsuariosService {
     public UsuarioToken criarToken(UsuarioLogin login)
         throws ExecutionException, InterruptedException {
 
-                QuerySnapshot loginSnapshot = getUsuarioByEmail(login.email()).get();
+        QuerySnapshot loginSnapshot = getUsuarioByEmail(login.email()).get();
 
-                if (loginSnapshot.isEmpty()) {
-                        throw new LoginInvalidException("Email ou senha inválidos.");
-                }
-
-                Usuarios usuario = convertDocumentToUsuario(loginSnapshot);
-
-                if (!passwordEncoder.matches(login.senha(), usuario.getSenha())) {
-                        throw new LoginInvalidException("Email ou senha inválidos.");
-                }
-
-                String token = tokenService.generateToken(usuario);
-
-                return new UsuarioToken(token);
+        if (loginSnapshot.isEmpty()) {
+                throw new LoginInvalidException("Email ou senha inválidos.");
         }
+
+        Usuarios usuario = convertDocumentToUsuario(loginSnapshot);
+
+        if (!passwordEncoder.matches(login.senha(), usuario.getSenha())) {
+                throw new LoginInvalidException("Email ou senha inválidos.");
+        }
+
+    public UsuarioResponse atualizarSenha(SenhaRequest senha)
+            throws ExecutionException, InterruptedException {
+
+        Usuarios usuario = getUsuarioAutenticado();
+
+        usuario.setSenha(
+                passwordEncoder.encode(senha.senha())
+        );
+
+        firestore.collection("usuarios")
+                .document(usuario.getId())
+                .set(usuario);
+
+        return usuarioMapper.toResponse(usuario);
+    }
+
+    public Boolean validarSenha(ValidarSenhaRequest request) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        String id = (principal instanceof UserDetails userDetails) 
+                ? userDetails.getUsername() 
+                : principal.toString();
+
+        Usuarios usuario = obterUsuarioPorIdDirect(id);
+
+        if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
+                return false; 
+
+        }
+
+        return true;
+    }
 
     public UsuarioResponse atualizarSenha(SenhaRequest senha)
             throws ExecutionException, InterruptedException {
@@ -96,12 +126,6 @@ public class UsuariosService {
             throws ExecutionException, InterruptedException {
 
         Usuarios usuario = getUsuarioAutenticado();
-
-        if ("FUNCIONARIO".equals(usuario.getPermissao()) && update.permissao() != null) {
-            if ("ADMIN".equals(update.permissao())) {
-                throw new UnauthorizedException("Funcionários não podem se promover a Administrador.");
-            }
-        }
 
         if (update.email() != null
                 && !update.email().equals(usuario.getEmail())) {
@@ -129,10 +153,14 @@ public class UsuariosService {
     public UsuarioResponse getUsuario(String id)
             throws ExecutionException, InterruptedException {
 
-        QuerySnapshot snapshot = getUsuarioById(id).get();
+        DocumentSnapshot document = firestore.collection("usuarios").document(id).get().get();
 
-        Usuarios usuario = convertDocumentToUsuario(snapshot);
+        if (!document.exists()) {
+            throw new EntityNotFoundException("Não foi possível encontrar o usuário");
+        }
 
+        Usuarios usuario = document.toObject(Usuarios.class);
+      
         return usuarioMapper.toResponse(usuario);
     }
 
@@ -151,33 +179,19 @@ public class UsuariosService {
                 .toList();
     }
 
-    public void deletarUsuario(
-            String id,
-            SenhaRequest request
-    ) throws ExecutionException, InterruptedException {
+    public void deletarUsuario(String id) throws ExecutionException, InterruptedException {
+        DocumentSnapshot document = firestore.collection("usuarios").document(id).get().get();
 
-        Usuarios usuarioLogado = getUsuarioAutenticado();
+        if (!document.exists()) {
 
-        if (!passwordEncoder.matches(
-                request.senha(),
-                usuarioLogado.getSenha()
-        )) {
-            throw new LoginInvalidException(
-                    "Não foi possível validar a requisição"
-            );
-        }
-
-        QuerySnapshot snapshot = getUsuarioById(id).get();
-
-        if (snapshot.isEmpty()) {
             throw new EntityNotFoundException(
                     "Não foi possível encontrar o usuário"
             );
         }
 
         firestore.collection("usuarios")
-                .document(id)
-                .delete();
+            .document(id)
+            .delete();
     }
 
     private Usuarios getUsuarioAutenticado()
@@ -189,9 +203,13 @@ public class UsuariosService {
                 .getPrincipal()
                 .toString();
 
-        QuerySnapshot snapshot = getUsuarioById(id).get();
+        DocumentSnapshot document = firestore.collection("usuarios").document(id).get().get();
 
-        return convertDocumentToUsuario(snapshot);
+        if (!document.exists()) {
+            throw new EntityNotFoundException("Não foi possível encontrar o usuário");
+        }
+
+        return document.toObject(Usuarios.class);
     }
 
     private static Usuarios convertDocumentToUsuario(
@@ -218,12 +236,17 @@ public class UsuariosService {
                 .get();
     }
 
-    private ApiFuture<QuerySnapshot> getUsuarioById(
-            String id
-    ) {
-
-        return firestore.collection("usuarios")
-                .whereEqualTo("id", id)
-                .get();
+    private Usuarios obterUsuarioPorIdDirect(String idUsuario) {
+        try {
+            DocumentSnapshot document = firestore.collection("usuarios").document(idUsuario).get().get();
+            if (document.exists()) {
+                return document.toObject(Usuarios.class);
+            } else {
+                throw new EntityNotFoundException("Usuário não encontrado com o ID: " + idUsuario);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Erro ao buscar usuário no Firestore", e);
+        }
     }
 }

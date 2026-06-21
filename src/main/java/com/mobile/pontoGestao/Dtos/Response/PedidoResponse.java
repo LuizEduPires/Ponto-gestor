@@ -20,5 +20,7 @@ public record PedidoResponse(
         Double pagamentoAntecipado,
         Double saldo,
 
+        Integer quantidade,
+
         TipoPagamento tipoPagamento
 ) {}
