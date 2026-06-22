@@ -1,13 +1,11 @@
 package com.mobile.pontoGestao.Infra;
 
 import com.mobile.pontoGestao.Erros.AuthorizationTokenInvalidException;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -17,53 +15,34 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
+    @Autowired
+    TokenService tokenService;
+
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String token = recoverToken(request);
-
-        if (token != null) {
-
+        if(token != null){
             String subject = tokenService.validateToken(token);
 
-            if (subject == null || subject.isBlank()) {
-                throw new RuntimeException("Token inválido");
-            }
+            if (subject.isEmpty()) throw new AuthorizationTokenInvalidException("Token invalido");
 
-            String role = tokenService.getPermissao(token);
-
-            List<GrantedAuthority> authorities =
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
-            var authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            subject,
-                            null,
-                            authorities
-                    );
-
+            var authentication = new UsernamePasswordAuthenticationToken(subject,null,List.of());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-
         filterChain.doFilter(request, response);
     }
 
-    private String recoverToken(HttpServletRequest request) {
+
+    private String recoverToken(HttpServletRequest request){
         String token = request.getHeader("Authorization");
-
-        if (token == null || token.isBlank()) {
+        if(token == null){
             return null;
+        }else{
+            return token.replace("Bearer ", "");
         }
-
-        return token.replace("Bearer ", "");
     }
 }

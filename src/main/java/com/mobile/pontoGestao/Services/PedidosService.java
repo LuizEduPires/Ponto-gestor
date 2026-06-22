@@ -17,7 +17,6 @@ import com.mobile.pontoGestao.Mappers.PedidosMapper;
 import com.mobile.pontoGestao.Models.Clientes;
 import com.mobile.pontoGestao.Models.ItemsPedido;
 import com.mobile.pontoGestao.Models.Pedidos;
-import com.mobile.pontoGestao.Models.Usuarios;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +34,6 @@ public class PedidosService {
 
     private final PedidosMapper pedidosMapper;
     private final Firestore firestore;
-    private final PasswordEncoder passwordEncoder;
 
     public PedidoResponse criarPedido(PedidoRequest request)
             throws ExecutionException, InterruptedException {
@@ -143,7 +141,7 @@ public class PedidosService {
             .set(pedido);
 
         return pedidosMapper.toDto(pedido);
-}
+    }
 
     public void deletarPedidos(String id)
             throws ExecutionException, InterruptedException {
@@ -211,7 +209,6 @@ public class PedidosService {
             throw new EntityNotFoundException("Cliente não encontrado");
         }
 
-
         return snapshot.getDocuments()
                 .getFirst()
                 .toObject(Clientes.class);
@@ -226,10 +223,13 @@ public class PedidosService {
             }
 
             itensAntigos.stream()
-                .filter(antigo -> antigo.getTitulo() != null && antigo.getTitulo().equalsIgnoreCase(itemNovo.getTitulo()))
-                .filter(antigo -> antigo.getTipo() == itemNovo.getTipo())
+                .filter(antigo -> (itemNovo.getId() != null && antigo.getId() != null && antigo.getId().equals(itemNovo.getId())) 
+                        || (antigo.getTitulo() != null && antigo.getTitulo().equalsIgnoreCase(itemNovo.getTitulo()) && antigo.getTipo() == itemNovo.getTipo()))
                 .findFirst()
                 .ifPresent(antigo -> {
+                    if (itemNovo.getId() == null || !itemNovo.getId().equals(antigo.getId())) {
+                        itemNovo.setId(antigo.getId());
+                    }
                     itemNovo.setImagem(antigo.getImagem());
                 });
         }

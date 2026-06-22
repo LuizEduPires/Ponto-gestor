@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record ItemsPedidoResponse(
+        String id,
         String titulo,
         String descricao,
         Double valor,

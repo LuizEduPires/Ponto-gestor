@@ -73,20 +73,8 @@ public class UsuariosService {
                 throw new LoginInvalidException("Email ou senha inválidos.");
         }
 
-    public UsuarioResponse atualizarSenha(SenhaRequest senha)
-            throws ExecutionException, InterruptedException {
-
-        Usuarios usuario = getUsuarioAutenticado();
-
-        usuario.setSenha(
-                passwordEncoder.encode(senha.senha())
-        );
-
-        firestore.collection("usuarios")
-                .document(usuario.getId())
-                .set(usuario);
-
-        return usuarioMapper.toResponse(usuario);
+        String token = tokenService.generateToken(usuario);
+        return new UsuarioToken(token); 
     }
 
     public Boolean validarSenha(ValidarSenhaRequest request) {
@@ -100,7 +88,6 @@ public class UsuariosService {
 
         if (!passwordEncoder.matches(request.senha(), usuario.getSenha())) {
                 return false; 
-
         }
 
         return true;
