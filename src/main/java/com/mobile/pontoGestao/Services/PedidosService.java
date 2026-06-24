@@ -63,43 +63,52 @@ public class PedidosService {
             String titulo,
             OrdenacaoPedido ordenacao
     ) throws ExecutionException, InterruptedException {
-
+    
         Query query = firestore.collection("pedidos");
-
+    
         if (statusPedido != null) {
             query = query.whereEqualTo("statusPedido", statusPedido);
         }
-
+    
         QuerySnapshot snapshot = query.get().get();
-
+    
         if (ordenacao == null) {
             ordenacao = OrdenacaoPedido.TITULO;
         }
-      
-        Comparator<PedidoResponse> comparator = switch (ordenacao) {
-            case NOME -> Comparator.comparing(PedidoResponse::nomeCliente);
-            case TITULO -> Comparator.comparing(PedidoResponse::titulo);
-            case PRAZO -> Comparator.comparing(
-                    p -> p.itens().stream()
-                            .map(ItemsPedidoResponse::dataPrazo)
-                            .filter(Objects::nonNull)
-                            .min(LocalDateTime::compareTo)
-                            .orElse(LocalDateTime.MAX)
+    
+        Comparator<Pedidos> comparator = switch (ordenacao) {
+            case NOME -> Comparator.comparing(
+                    Pedidos::getNomeCliente, 
+                    Comparator.nullsLast(String::compareToIgnoreCase)
             );
+            case TITULO -> Comparator.comparing(
+                    Pedidos::getTitulo, 
+                    Comparator.nullsLast(String::compareToIgnoreCase)
+            );
+            case PRAZO -> Comparator.comparing(p -> {
+                if (p.getItens() == null || p.getItens().isEmpty()) {
+                    return java.time.Instant.MAX;
+                }
+                return p.getItens().stream()
+                        .map(ItemsPedido::getDataPrazo)
+                        .filter(Objects::nonNull)
+                        .map(timestamp -> timestamp.toDate().toInstant())
+                        .min(java.time.Instant::compareTo)
+                        .orElse(java.time.Instant.MAX);
+            });
         };
-
+    
         return snapshot.getDocuments()
                 .stream()
                 .map(doc -> doc.toObject(Pedidos.class))
-                .map(pedidosMapper::toDto)
-                .filter(p ->
-                        titulo == null ||
-                        p.titulo().toLowerCase().contains(titulo.toLowerCase())
+                .filter(p -> titulo == null || 
+                        (p.getTitulo() != null && p.getTitulo().toLowerCase().contains(titulo.toLowerCase()))
                 )
                 .sorted(comparator)
+                .map(pedidosMapper::toDto)
                 .toList();
     }
-
+    
     public List<PedidoResponse> getPedidosByCliente(String idCliente)
             throws ExecutionException, InterruptedException {
 
