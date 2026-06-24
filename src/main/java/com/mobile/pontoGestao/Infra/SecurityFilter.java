@@ -24,15 +24,22 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        
         String token = recoverToken(request);
-        if(token != null){
-            String subject = tokenService.validateToken(token);
-
-            if (subject.isEmpty()) throw new AuthorizationTokenInvalidException("Token invalido");
-
-            var authentication = new UsernamePasswordAuthenticationToken(subject,null,List.of());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        if (token != null) {
+            try {
+                String subject = tokenService.validateToken(token);
+    
+                if (subject != null && !subject.isEmpty()) {
+                    var authentication = new UsernamePasswordAuthenticationToken(subject, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (RuntimeException ex) {
+                SecurityContextHolder.clearContext();
+            }
         }
+        
         filterChain.doFilter(request, response);
     }
 
