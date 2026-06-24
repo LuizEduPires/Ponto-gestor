@@ -9,7 +9,8 @@ import org.mapstruct.*;
 @Mapper(
     componentModel = "spring",
     uses = {ItemsPedidoMapper.class},
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+    collectionMappingStrategy = CollectionMappingStrategy.TARGET_IMMUTABLE 
 )
 public interface PedidosMapper {
 
@@ -17,6 +18,7 @@ public interface PedidosMapper {
 
     PedidoResponse toDto(Pedidos pedido);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFromRequest(
             PedidoRequestUpdate request,
             @MappingTarget Pedidos pedido
