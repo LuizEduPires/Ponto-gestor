@@ -61,7 +61,7 @@ public class ClientesService {
         if (ordenacao != null) {
             comparator = switch (ordenacao) {
                 case CRIACAO ->
-                        Comparator.comparing(ClienteResponse::dataCriacao);
+                        Comparator.comparing(ClienteResponse::dataCriacao).reversed();;
                 case NOME ->
                         Comparator.comparing(ClienteResponse::nome);
             };
