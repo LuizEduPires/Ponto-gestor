@@ -8,12 +8,9 @@ import com.mobile.pontoGestao.Dtos.Request.ClienteUpdateRequest;
 import com.mobile.pontoGestao.Dtos.Response.ClienteResponse;
 import com.mobile.pontoGestao.Enums.OrdenacaoCliente;
 import com.mobile.pontoGestao.Erros.EntityNotFoundException;
-import com.mobile.pontoGestao.Erros.LoginInvalidException;
 import com.mobile.pontoGestao.Mappers.ClienteMapper;
 import com.mobile.pontoGestao.Models.Clientes;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -26,7 +23,6 @@ public class ClientesService {
 
     private final Firestore firestore;
     private final ClienteMapper clienteMapper;
-    private final PasswordEncoder passwordEncoder;
 
     public ClienteResponse criarCliente(ClienteRequest request) {
 
@@ -65,7 +61,7 @@ public class ClientesService {
         if (ordenacao != null) {
             comparator = switch (ordenacao) {
                 case CRIACAO ->
-                        Comparator.comparing(ClienteResponse::dataCriacao);
+                        Comparator.comparing(ClienteResponse::dataCriacao).reversed();
                 case NOME ->
                         Comparator.comparing(ClienteResponse::nome);
             };
